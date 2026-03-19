@@ -1,0 +1,2988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Analysis for Finance — PhD Seminar</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e17;
+    --surface: #111827;
+    --surface2: #1a2234;
+    --accent: #3b6fd4;
+    --accent2: #e07b39;
+    --accent3: #4ecca3;
+    --accent4: #c084fc;
+    --text: #e8edf5;
+    --text-dim: #8899b0;
+    --border: #1e2d45;
+    --red: #ef4444;
+    --green: #10b981;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* Background canvas */
+  #bg-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0.12;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Slide container */
+  .deck {
+    position: relative;
+    z-index: 1;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .slide {
+    display: none;
+    width: 980px;
+    max-width: 96vw;
+    max-height: 92vh;
+    overflow-y: auto;
+    animation: fadeSlide 0.4s cubic-bezier(0.22,1,0.36,1);
+  }
+  .slide.active { display: flex; flex-direction: column; }
+  .slide::-webkit-scrollbar { width: 4px; }
+  .slide::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .slide-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+
+  .section-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-bottom: 12px;
+  }
+  .section-tag.orange { background: var(--accent2); }
+  .section-tag.teal   { background: var(--accent3); color: #0a0e17; }
+  .section-tag.purple { background: var(--accent4); color: #0a0e17; }
+  .section-tag.red    { background: var(--red); }
+
+  .slide-title-main {
+    min-height: 70vh;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .slide-title-main h1 {
+    font-size: clamp(48px, 7vw, 82px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -3px;
+    color: var(--text);
+  }
+  .slide-title-main h1 span { color: var(--accent); }
+  .slide-title-main .subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+    margin-top: 24px;
+  }
+  .slide-title-main .subtitle2 {
+    font-size: 16px;
+    color: var(--accent2);
+    margin-top: 12px;
+    font-weight: 600;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+  }
+  .four-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 22px 24px;
+  }
+  .card.accent-left { border-left: 3px solid var(--accent); }
+  .card.accent-left-orange { border-left: 3px solid var(--accent2); }
+  .card.accent-left-teal { border-left: 3px solid var(--accent3); }
+  .card.accent-left-purple { border-left: 3px solid var(--accent4); }
+  .card.accent-left-red { border-left: 3px solid var(--red); }
+  .card.clickable { cursor: pointer; transition: all 0.2s; }
+  .card.clickable:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+  h2 {
+    font-size: clamp(24px, 3.5vw, 36px);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 24px;
+    color: var(--text);
+  }
+  h2 span { color: var(--accent); }
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+  h3.orange { color: var(--accent2); }
+  h3.teal   { color: var(--accent3); }
+  h3.purple { color: var(--accent4); }
+
+  ul { list-style: none; padding: 0; }
+  ul li {
+    padding: 5px 0 5px 18px;
+    position: relative;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+  }
+  ul li:last-child { border-bottom: none; }
+  ul li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  ul li strong { color: var(--text); font-weight: 600; }
+
+  .math-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    color: var(--accent3);
+    margin: 12px 0;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+  .math-block .comment { color: var(--text-dim); font-size: 12px; }
+  .math-block .keyword { color: var(--accent2); }
+  .math-block .highlight { color: var(--accent); font-weight: 600; }
+
+  .big-stat {
+    font-size: clamp(40px, 6vw, 68px);
+    font-weight: 700;
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .big-stat.orange { color: var(--accent2); }
+  .big-stat.teal { color: var(--accent3); }
+
+  .quote-block {
+    border-left: 3px solid var(--accent2);
+    padding: 14px 20px;
+    font-style: italic;
+    color: var(--text-dim);
+    background: var(--surface);
+    border-radius: 0 6px 6px 0;
+    margin: 12px 0;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .quote-block cite {
+    display: block; margin-top: 8px; font-style: normal;
+    color: var(--accent2); font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    margin: 8px 0;
+  }
+  .matrix-table th, .matrix-table td {
+    padding: 6px 8px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .matrix-table th {
+    background: var(--surface2);
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 11px;
+  }
+  .matrix-table td { color: var(--text-dim); }
+  .matrix-table td.hot { color: var(--accent2); font-weight: 600; }
+  .matrix-table td.zero { color: var(--border); }
+
+  /* Interactive canvas */
+  .demo-canvas {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: crosshair;
+  }
+  .demo-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .demo-btn {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .demo-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .demo-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .demo-btn.orange:hover, .demo-btn.orange.active { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+  .demo-btn.teal:hover, .demo-btn.teal.active { background: var(--accent3); border-color: var(--accent3); color: #0a0e17; }
+  .demo-btn.red:hover, .demo-btn.red.active { background: var(--red); border-color: var(--red); color: #fff; }
+
+  .demo-readout {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: 4px;
+    min-height: 36px;
+    line-height: 1.5;
+  }
+  .demo-readout .val { color: var(--accent); font-weight: 600; }
+  .demo-readout .val2 { color: var(--accent2); font-weight: 600; }
+  .demo-readout .val3 { color: var(--accent3); font-weight: 600; }
+
+  /* Progress bar */
+  .progress {
+    position: fixed;
+    bottom: 0; left: 0;
+    height: 3px;
+    background: var(--accent);
+    z-index: 10;
+    transition: width 0.3s;
+  }
+
+  /* Nav hint */
+  .nav-hint {
+    position: fixed;
+    bottom: 16px;
+    right: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    opacity: 0.5;
+    z-index: 10;
+  }
+
+  /* Separator */
+  .sep { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* Inline code */
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--surface2);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 13px;
+    color: var(--accent3);
+  }
+
+  /* Tag / badge */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+  }
+  .badge.blue { background: rgba(59,111,212,0.2); color: var(--accent); }
+  .badge.orange { background: rgba(224,123,57,0.2); color: var(--accent2); }
+  .badge.teal { background: rgba(78,204,163,0.2); color: var(--accent3); }
+  .badge.purple { background: rgba(192,132,252,0.2); color: var(--accent4); }
+  .badge.red { background: rgba(239,68,68,0.2); color: var(--red); }
+
+  .gap { height: 16px; }
+  .gap-sm { height: 8px; }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div class="deck">
+
+<!-- ====== SLIDE 1: TITLE ====== -->
+<div class="slide slide-title-main active" data-index="0">
+  <div class="slide-num">PhD Finance Seminar · 2026</div>
+  <h1>Network Analysis<br>for <span>Finance</span></h1>
+  <div class="subtitle">FROM EDGES TO EIGENVECTORS — A PRACTITIONER'S TOOLKIT</div>
+  <div class="subtitle2">Graphs · Centrality · Laplacian · Spectral Methods · Community Detection</div>
+</div>
+
+<!-- ====== SLIDE 2: WHY NETWORKS ====== -->
+<div class="slide" data-index="1">
+  <div class="slide-num">01 / Motivation</div>
+  <span class="section-tag">Why Networks?</span>
+  <h2>Finance is a <span>Network</span> Problem</h2>
+  <div class="two-col">
+    <div>
+      <div class="card accent-left">
+        <h3>Traditional Finance</h3>
+        <ul>
+          <li><strong>CAPM, APT</strong> — assets priced independently</li>
+          <li>Covariance matrix is "flat" — no structure</li>
+          <li>Diversification assumes <strong>pairwise</strong> correlations</li>
+          <li>Misses <strong>higher-order</strong> dependencies</li>
+        </ul>
+      </div>
+      <div class="gap"></div>
+      <div class="quote-block">
+        "The financial system is a network of promises. When one node breaks a promise, the cascade is governed by network topology."
+        <cite>— Haldane & May (2011), Nature</cite>
+      </div>
+    </div>
+    <div>
+      <div class="card accent-left-orange">
+        <h3 class="orange">Network Finance</h3>
+        <ul>
+          <li><strong>Nodes</strong> = banks, stocks, funds, countries</li>
+          <li><strong>Edges</strong> = loans, correlations, exposures, ownership</li>
+          <li>Captures <strong>indirect</strong> linkages and contagion paths</li>
+          <li>Identifies <strong>systemic importance</strong> structurally</li>
+        </ul>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-teal">
+        <h3 class="teal">Key References</h3>
+        <ul>
+          <li><strong>Mantegna (1999)</strong> — correlation-based stock networks</li>
+          <li><strong>Allen & Gale (2000)</strong> — financial contagion</li>
+          <li><strong>Billio et al. (2012)</strong> — Granger-causality networks</li>
+          <li><strong>Diebold & Yılmaz (2014)</strong> — variance decomposition</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 3: GRAPH FUNDAMENTALS ====== -->
+<div class="slide" data-index="2">
+  <div class="slide-num">02 / Foundations</div>
+  <span class="section-tag">Graphs</span>
+  <h2>Graphs, Nodes, <span>Edges</span></h2>
+  <div class="two-col">
+    <div>
+      <div class="math-block">
+        G = (V, E)<br>
+        <span class="comment">V = set of vertices (institutions)</span><br>
+        <span class="comment">E ⊆ V × V (bilateral relationships)</span><br><br>
+        <span class="keyword">Adjacency Matrix:</span><br>
+        A<sub>ij</sub> = w<sub>ij</sub> if (i,j) ∈ E, else 0<br><br>
+        <span class="keyword">Degree:</span><br>
+        d<sub>i</sub> = Σ<sub>j</sub> A<sub>ij</sub> <span class="comment">(total exposure)</span><br><br>
+        <span class="keyword">Density:</span><br>
+        ρ = |E| / (|V| × (|V|-1) / 2)
+      </div>
+      <div class="gap-sm"></div>
+      <div class="card accent-left">
+        <h3>Financial Edge Types</h3>
+        <ul>
+          <li><strong>Undirected</strong> — correlation, co-ownership</li>
+          <li><strong>Directed</strong> — lending, Granger causality</li>
+          <li><strong>Weighted</strong> — exposure amounts, correlation strength</li>
+          <li><strong>Signed</strong> — positive/negative correlations</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <canvas id="canvas-graph" class="demo-canvas" width="440" height="340"></canvas>
+      <div class="demo-controls">
+        <button class="demo-btn active" onclick="graphDemo('interbank')">Interbank</button>
+        <button class="demo-btn orange" onclick="graphDemo('correlation')">Correlation</button>
+        <button class="demo-btn teal" onclick="graphDemo('bipartite')">Bipartite</button>
+      </div>
+      <div class="demo-readout" id="graph-readout">
+        Click a node to see its <span class="val">degree</span> and connections
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 4: ADJACENCY MATRIX ====== -->
+<div class="slide" data-index="3">
+  <div class="slide-num">03 / Foundations</div>
+  <span class="section-tag">Representation</span>
+  <h2>The <span>Adjacency Matrix</span></h2>
+  <div class="two-col">
+    <div>
+      <div class="card accent-left">
+        <h3>Matrix Powers = Walk Counts</h3>
+        <ul>
+          <li><strong>A<sup>1</sup></strong> — direct connections (1-step)</li>
+          <li><strong>A<sup>2</sup></strong><sub>ij</sub> = number of <strong>2-step walks</strong> from i to j</li>
+          <li><strong>A<sup>k</sup></strong><sub>ij</sub> = number of <strong>k-step walks</strong></li>
+          <li>Finance: k-step walks = <strong>indirect contagion channels</strong></li>
+        </ul>
+      </div>
+      <div class="gap"></div>
+      <div class="math-block">
+        <span class="keyword">Example: Interbank Lending</span><br><br>
+        (A²)<sub>ij</sub> = Σ<sub>k</sub> A<sub>ik</sub> · A<sub>kj</sub><br>
+        <span class="comment">= total indirect exposure from i to j</span><br>
+        <span class="comment">  through all intermediate banks k</span><br><br>
+        <span class="highlight">tr(A²) = Σ d²<sub>i</sub> = total paths of length 2</span><br>
+        <span class="highlight">tr(A³) / 6 = number of triangles</span>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-orange">
+        <h3 class="orange">Triangles in Finance</h3>
+        <ul>
+          <li>A—B—C—A forms a <strong>closed contagion loop</strong></li>
+          <li>High clustering → shocks <strong>reverberate</strong></li>
+          <li>Clustering coefficient: C<sub>i</sub> = (triangles at i) / (possible triangles)</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <table class="matrix-table" id="adj-matrix">
+        <tr><th></th><th>JPM</th><th>GS</th><th>Citi</th><th>BofA</th><th>MS</th><th>WF</th></tr>
+        <tr><th>JPM</th><td class="zero">0</td><td class="hot">12.5</td><td class="hot">8.3</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr><th>GS</th><td>0</td><td class="zero">0</td><td>0</td><td>4.2</td><td class="hot">6.7</td><td>0</td></tr>
+        <tr><th>Citi</th><td>0</td><td>0</td><td class="zero">0</td><td class="hot">9.1</td><td>0</td><td>3.8</td></tr>
+        <tr><th>BofA</th><td class="hot">7.6</td><td>0</td><td>0</td><td class="zero">0</td><td>0</td><td>0</td></tr>
+        <tr><th>MS</th><td>0</td><td>0</td><td>5.4</td><td>0</td><td class="zero">0</td><td>0</td></tr>
+        <tr><th>WF</th><td>2.9</td><td>4.1</td><td>0</td><td>0</td><td>0</td><td class="zero">0</td></tr>
+      </table>
+      <div class="gap"></div>
+      <div class="demo-readout">
+        <span class="val2">Weighted adjacency matrix</span> of a directed interbank lending network<br>
+        A<sub>ij</sub> = loan from bank i to bank j ($B)<br>
+        <span class="val">Non-symmetric</span> → directed graph (lending ≠ borrowing)
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-teal">
+        <h3 class="teal">Degree Matrix</h3>
+        <div class="math-block" style="font-size:13px;">
+          D = diag(d₁, d₂, ..., d<sub>n</sub>)<br>
+          <span class="comment">d<sub>i</sub> = row sum of A (out-degree for directed)</span><br>
+          <span class="comment">D captures each node's total exposure</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 5: CENTRALITY OVERVIEW ====== -->
+<div class="slide" data-index="4">
+  <div class="slide-num">04 / Centrality</div>
+  <span class="section-tag orange">Centrality</span>
+  <h2>Which Institution is <span>Most Important?</span></h2>
+  <div class="four-col">
+    <div class="card accent-left">
+      <h3>Degree</h3>
+      <div class="math-block" style="font-size:12px;">C<sub>D</sub>(i) = d<sub>i</sub> / (n-1)</div>
+      <ul>
+        <li><strong>Counts</strong>: direct connections</li>
+        <li>Finance: <strong>diversification difficulty</strong></li>
+        <li>High = hard to avoid in portfolio</li>
+      </ul>
+    </div>
+    <div class="card accent-left-orange">
+      <h3 class="orange">Betweenness</h3>
+      <div class="math-block" style="font-size:12px;">C<sub>B</sub>(i) = Σ σ<sub>st</sub>(i)/σ<sub>st</sub></div>
+      <ul>
+        <li><strong>Counts</strong>: shortest paths through i</li>
+        <li>Finance: <strong>contagion bottleneck</strong></li>
+        <li>High = systemic risk intermediary</li>
+      </ul>
+    </div>
+    <div class="card accent-left-teal">
+      <h3 class="teal">Closeness</h3>
+      <div class="math-block" style="font-size:12px;">C<sub>C</sub>(i) = (n-1) / Σ d(i,j)</div>
+      <ul>
+        <li><strong>Measures</strong>: avg distance to all</li>
+        <li>Finance: <strong>shock propagation speed</strong></li>
+        <li>High = infects market fastest</li>
+      </ul>
+    </div>
+    <div class="card accent-left-purple">
+      <h3 class="purple">Eigenvector</h3>
+      <div class="math-block" style="font-size:12px;">Ax = λ₁x<br>x<sub>i</sub> ∝ Σ A<sub>ij</sub>x<sub>j</sub></div>
+      <ul>
+        <li><strong>Recursive</strong>: important if neighbors important</li>
+        <li>Finance: <strong>too-connected-to-fail</strong></li>
+        <li>High = inner circle of the market</li>
+      </ul>
+    </div>
+  </div>
+  <div class="gap"></div>
+  <div class="quote-block">
+    "Different centrality measures answer different policy questions: degree for exposure limits, betweenness for circuit breakers, eigenvector for bailout priority."
+    <cite>— Battiston et al. (2012), Journal of Financial Economics</cite>
+  </div>
+</div>
+
+<!-- ====== SLIDE 6: INTERACTIVE CENTRALITY ====== -->
+<div class="slide" data-index="5">
+  <div class="slide-num">05 / Centrality</div>
+  <span class="section-tag orange">Interactive</span>
+  <h2>Centrality <span>Explorer</span></h2>
+  <div class="two-col">
+    <div>
+      <canvas id="canvas-centrality" class="demo-canvas" width="440" height="380"></canvas>
+      <div class="demo-controls">
+        <button class="demo-btn active" onclick="centralityMode('degree')">Degree</button>
+        <button class="demo-btn orange" onclick="centralityMode('betweenness')">Betweenness</button>
+        <button class="demo-btn teal" onclick="centralityMode('closeness')">Closeness</button>
+        <button class="demo-btn" onclick="centralityMode('eigenvector')" style="color:var(--accent4)">Eigenvector</button>
+      </div>
+      <div class="demo-readout" id="centrality-readout">
+        Nodes sized by <span class="val">degree centrality</span>. Click a node for details.
+      </div>
+    </div>
+    <div>
+      <div class="card accent-left">
+        <h3>Ranking Comparison</h3>
+        <table class="matrix-table" id="centrality-table">
+          <tr><th>Stock</th><th>Sector</th><th>Deg</th><th>Btw</th><th>Cls</th><th>Eig</th></tr>
+          <tr><td>JPM</td><td><span class="badge red">Fin</span></td><td class="hot">0.87</td><td class="hot">0.19</td><td>0.72</td><td class="hot">0.38</td></tr>
+          <tr><td>AAPL</td><td><span class="badge blue">Tech</span></td><td>0.73</td><td>0.14</td><td class="hot">0.68</td><td>0.35</td></tr>
+          <tr><td>XOM</td><td><span class="badge orange">Ener</span></td><td>0.60</td><td class="hot">0.16</td><td>0.61</td><td>0.29</td></tr>
+          <tr><td>MSFT</td><td><span class="badge blue">Tech</span></td><td>0.67</td><td>0.09</td><td>0.65</td><td>0.33</td></tr>
+          <tr><td>GS</td><td><span class="badge red">Fin</span></td><td>0.73</td><td>0.12</td><td>0.67</td><td>0.36</td></tr>
+          <tr><td>UNH</td><td><span class="badge teal">Hlth</span></td><td>0.53</td><td>0.11</td><td>0.58</td><td>0.24</td></tr>
+          <tr><td>JNJ</td><td><span class="badge teal">Hlth</span></td><td>0.47</td><td>0.08</td><td>0.55</td><td>0.21</td></tr>
+        </table>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-orange">
+        <h3 class="orange">Key Insight</h3>
+        <ul>
+          <li>Degree and eigenvector are <strong>highly correlated</strong> (ρ ≈ 0.9)</li>
+          <li>Betweenness captures <strong>different</strong> structural role</li>
+          <li>A high-betweenness, low-degree node = <strong>bridge</strong> between sectors</li>
+          <li>Removing bridges <strong>fragments</strong> the market into isolated clusters</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 7: EIGENVECTOR CENTRALITY DEEP DIVE ====== -->
+<div class="slide" data-index="6">
+  <div class="slide-num">06 / Centrality</div>
+  <span class="section-tag purple">Eigenvector</span>
+  <h2>Eigenvector Centrality & <span>PageRank</span></h2>
+  <div class="two-col">
+    <div>
+      <div class="math-block">
+        <span class="keyword">Eigenvector Centrality:</span><br>
+        A · x = λ₁ · x<br><br>
+        <span class="highlight">x<sub>i</sub> = (1/λ₁) Σ<sub>j</sub> A<sub>ij</sub> · x<sub>j</sub></span><br><br>
+        <span class="comment">"My importance = sum of my neighbors'</span><br>
+        <span class="comment"> importances, normalized by spectral radius"</span><br><br>
+        <span class="keyword">Perron-Frobenius Theorem:</span><br>
+        For connected, non-negative A:<br>
+        • λ₁ is the <span class="highlight">largest</span> eigenvalue<br>
+        • x has <span class="highlight">all positive</span> entries<br>
+        • x is <span class="highlight">unique</span> (up to scaling)
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-purple">
+        <h3 class="purple">Financial Meaning</h3>
+        <ul>
+          <li>A stock is "important" if co-held with other important stocks</li>
+          <li>Captures the <strong>"inner circle"</strong> of institutional portfolios</li>
+          <li>High eigenvector = <strong>too-connected-to-fail</strong></li>
+          <li>Its failure cascades through recursively important neighbors</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card accent-left-orange">
+        <h3 class="orange">PageRank — Damped Eigenvector</h3>
+        <div class="math-block" style="font-size:13px;">
+          <span class="keyword">PageRank:</span><br>
+          π = α · A<sup>T</sup>D<sup>-1</sup> · π + (1-α) · <strong>1</strong>/n<br><br>
+          <span class="comment">α = 0.85 (damping factor)</span><br>
+          <span class="comment">(1-α) = "random teleportation" probability</span><br><br>
+          <span class="keyword">Finance interpretation:</span><br>
+          α = investor follows correlations<br>
+          1-α = investor <span class="highlight">randomly picks a stock</span><br><br>
+          As α → 1: PageRank → Eigenvector centrality
+        </div>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-teal">
+        <h3 class="teal">Katz Centrality</h3>
+        <div class="math-block" style="font-size:13px;">
+          x = (I - αA)<sup>-1</sup> · <strong>1</strong><br>
+          = Σ<sub>k=0</sub><sup>∞</sup> α<sup>k</sup> A<sup>k</sup> · <strong>1</strong><br><br>
+          <span class="comment">Counts ALL walks of ALL lengths</span><br>
+          <span class="comment">Decayed by α<sup>k</sup> (must be α < 1/λ₁)</span><br><br>
+          <span class="keyword">Finance:</span> indirect contagion channels<br>
+          <span class="comment">Every intermediary path counts, not just shortest</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 8: LAPLACIAN ====== -->
+<div class="slide" data-index="7">
+  <div class="slide-num">07 / Laplacian</div>
+  <span class="section-tag teal">Laplacian</span>
+  <h2>The Graph <span>Laplacian</span></h2>
+  <div class="two-col">
+    <div>
+      <div class="math-block">
+        <span class="keyword">Definition:</span><br>
+        <span class="highlight">L = D − A</span><br><br>
+        <span class="comment">D = degree matrix (diagonal)</span><br>
+        <span class="comment">A = adjacency matrix</span><br><br>
+        <span class="keyword">Properties:</span><br>
+        • Symmetric (for undirected graphs)<br>
+        • Positive semi-definite: all λ<sub>i</sub> ≥ 0<br>
+        • Row sums = 0: L · <strong>1</strong> = <strong>0</strong><br>
+        • Smallest eigenvalue λ₀ = 0 always<br><br>
+        <span class="keyword">Quadratic Form:</span><br>
+        <span class="highlight">x<sup>T</sup>Lx = Σ<sub>(i,j)∈E</sub> w<sub>ij</sub>(x<sub>i</sub> − x<sub>j</sub>)²</span><br>
+        <span class="comment">= total "stress" across all edges</span><br>
+        <span class="comment">= smoothness penalty for signal x on graph</span>
+      </div>
+    </div>
+    <div>
+      <div class="card accent-left-teal">
+        <h3 class="teal">Financial Interpretation</h3>
+        <ul>
+          <li>L encodes how <strong>shocks diffuse</strong> through the network</li>
+          <li>x<sup>T</sup>Lx = how much a portfolio allocation x is <strong>penalized</strong> by network structure</li>
+          <li>Smooth x (similar values on connected nodes) → low x<sup>T</sup>Lx</li>
+          <li>The <strong>eigenvalues</strong> of L reveal network fragility</li>
+        </ul>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-orange">
+        <h3 class="orange">Normalized Laplacian</h3>
+        <div class="math-block" style="font-size:13px;">
+          <span class="keyword">Symmetric normalized:</span><br>
+          L<sub>sym</sub> = D<sup>-½</sup> L D<sup>-½</sup> = I − D<sup>-½</sup>AD<sup>-½</sup><br><br>
+          <span class="keyword">Random walk:</span><br>
+          L<sub>rw</sub> = D<sup>-1</sup>L = I − D<sup>-1</sup>A<br><br>
+          <span class="comment">Normalization removes heterogeneity in node sizes</span><br>
+          <span class="comment">Critical when comparing US ($trillions) with KR ($billions)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 9: FIEDLER VALUE ====== -->
+<div class="slide" data-index="8">
+  <div class="slide-num">08 / Laplacian</div>
+  <span class="section-tag teal">Algebraic Connectivity</span>
+  <h2>λ₂ — The <span>Fiedler Value</span></h2>
+  <div class="two-col">
+    <div>
+      <div class="big-stat teal">λ₂</div>
+      <p style="color:var(--text-dim);font-size:15px;margin-bottom:20px;">Second smallest eigenvalue of L = <strong>algebraic connectivity</strong></p>
+      <div class="card accent-left-teal">
+        <h3 class="teal">What λ₂ Measures</h3>
+        <ul>
+          <li><strong>λ₂ > 0</strong> ⟺ graph is <strong>connected</strong></li>
+          <li><strong>Larger λ₂</strong> → more <strong>robust</strong> network (harder to split)</li>
+          <li><strong>Smaller λ₂</strong> → more <strong>fragile</strong> (a few cuts disconnect it)</li>
+          <li><strong>λ₂ = 0</strong> → network is <strong>already disconnected</strong></li>
+        </ul>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-red">
+        <h3 style="color:var(--red)">Cheeger Inequality</h3>
+        <div class="math-block" style="font-size:13px;">
+          λ₂ / 2 ≤ h(G) ≤ √(2·λ₂)<br><br>
+          <span class="comment">h(G) = Cheeger constant = min-cut / vol</span><br>
+          <span class="comment">Tight bound between spectral and combinatorial</span><br>
+          <span class="keyword">Finance:</span> h(G) = the narrowest bottleneck<br>
+          <span class="comment">in the financial system's contagion capacity</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <canvas id="canvas-fiedler" class="demo-canvas" width="440" height="300"></canvas>
+      <div class="demo-controls">
+        <button class="demo-btn teal active" onclick="fiedlerDemo('partition')">Fiedler Partition</button>
+        <button class="demo-btn red" onclick="fiedlerDemo('remove')">Remove Edge</button>
+        <button class="demo-btn orange" onclick="fiedlerDemo('stress')">Stress Test</button>
+      </div>
+      <div class="demo-readout" id="fiedler-readout">
+        Sovereign debt network colored by <span class="val3">Fiedler vector</span> sign.<br>
+        Positive (blue) vs Negative (red) = natural fault line.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 10: FIEDLER VECTOR ====== -->
+<div class="slide" data-index="9">
+  <div class="slide-num">09 / Laplacian</div>
+  <span class="section-tag teal">Spectral Partition</span>
+  <h2>The Fiedler <span>Vector</span></h2>
+  <div class="two-col">
+    <div>
+      <div class="math-block">
+        <span class="keyword">Fiedler Vector:</span><br>
+        L · v₂ = λ₂ · v₂<br><br>
+        <span class="comment">v₂ = eigenvector for 2nd smallest eigenvalue</span><br><br>
+        <span class="keyword">Spectral Bisection:</span><br>
+        Group A = {i : v₂(i) ≥ 0}<br>
+        Group B = {i : v₂(i) < 0}<br><br>
+        <span class="highlight">This minimizes the normalized cut:</span><br>
+        Ncut = cut(A,B)/vol(A) + cut(A,B)/vol(B)<br><br>
+        <span class="comment">Relaxation of the NP-hard min-cut problem</span><br>
+        <span class="comment">Solved exactly by eigendecomposition!</span>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left">
+        <h3>Finance Application</h3>
+        <ul>
+          <li>Partition sovereign debt network → find <strong>natural fault lines</strong></li>
+          <li>Sign of v₂ reveals which countries form a <strong>bloc</strong></li>
+          <li>Magnitude of v₂(i) → how strongly i belongs to its bloc</li>
+          <li>Near-zero v₂(i) → country is on the <strong>boundary</strong> (swing state)</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card accent-left-orange">
+        <h3 class="orange">Sovereign Debt Example</h3>
+        <table class="matrix-table">
+          <tr><th>Country</th><th>Region</th><th>v₂(i)</th><th>Bloc</th></tr>
+          <tr><td>CN</td><td>Asia</td><td class="hot">−0.48</td><td><span class="badge red">A</span></td></tr>
+          <tr><td>KR</td><td>Asia</td><td class="hot">−0.41</td><td><span class="badge red">A</span></td></tr>
+          <tr><td>BR</td><td>Americas</td><td class="hot">−0.37</td><td><span class="badge red">A</span></td></tr>
+          <tr><td>JP</td><td>Asia</td><td>−0.12</td><td><span class="badge red">A</span></td></tr>
+          <tr><td>US</td><td>Americas</td><td>+0.08</td><td><span class="badge blue">B</span></td></tr>
+          <tr><td>UK</td><td>Europe</td><td>+0.22</td><td><span class="badge blue">B</span></td></tr>
+          <tr><td>ES</td><td>Europe</td><td>+0.28</td><td><span class="badge blue">B</span></td></tr>
+          <tr><td>IT</td><td>Europe</td><td>+0.31</td><td><span class="badge blue">B</span></td></tr>
+          <tr><td>FR</td><td>Europe</td><td class="hot">+0.38</td><td><span class="badge blue">B</span></td></tr>
+          <tr><td>DE</td><td>Europe</td><td class="hot">+0.42</td><td><span class="badge blue">B</span></td></tr>
+        </table>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-teal">
+        <h3 class="teal">Interpretation</h3>
+        <ul>
+          <li>Bloc A: <strong>Asia + Emerging</strong> — China, Korea, Brazil, Japan</li>
+          <li>Bloc B: <strong>Europe + US</strong> — transatlantic financial axis</li>
+          <li>US near zero → <strong>bridge</strong> between both blocs</li>
+          <li>Monitoring λ₂ over time → <strong>early warning</strong> for fragmentation</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 11: FULL SPECTRUM ====== -->
+<div class="slide" data-index="10">
+  <div class="slide-num">10 / Laplacian</div>
+  <span class="section-tag teal">Spectrum</span>
+  <h2>The Laplacian <span>Spectrum</span></h2>
+  <div class="two-col">
+    <div>
+      <canvas id="canvas-spectrum" class="demo-canvas" width="440" height="280"></canvas>
+      <div class="demo-controls">
+        <button class="demo-btn teal active" onclick="spectrumDemo('sovereign')">Sovereign Debt</button>
+        <button class="demo-btn orange" onclick="spectrumDemo('cds')">CDS Network</button>
+        <button class="demo-btn" onclick="spectrumDemo('correlation')">Correlation</button>
+      </div>
+      <div class="demo-readout" id="spectrum-readout">
+        Laplacian eigenvalues. <span class="val3">Green bar = λ₂ (Fiedler value)</span>.<br>
+        Hover bars for eigenvalue details.
+      </div>
+    </div>
+    <div>
+      <div class="card accent-left-teal">
+        <h3 class="teal">Eigenvalue Interpretation</h3>
+        <ul>
+          <li><strong>λ₀ = 0</strong> always (connected component)</li>
+          <li><strong>λ₁ = 0</strong> means <strong>two</strong> components → disconnected</li>
+          <li><strong>λ₂</strong> = algebraic connectivity = <strong>robustness</strong></li>
+          <li><strong>Spectral gap</strong> (λ₂) → <strong>mixing time</strong> of random walk</li>
+          <li><strong>λ_max</strong> → spectral radius, bounds contagion speed</li>
+        </ul>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left">
+        <h3>Kirchhoff's Theorem</h3>
+        <div class="math-block" style="font-size:13px;">
+          <span class="keyword">Number of spanning trees:</span><br>
+          τ(G) = (1/n) · Π<sub>i=1</sub><sup>n-1</sup> λ<sub>i</sub><br><br>
+          <span class="comment">More spanning trees = more redundant paths</span><br>
+          <span class="comment">= more ways the system stays connected</span><br>
+          <span class="keyword">Finance:</span> high τ(G) → resilient to link failures
+        </div>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-orange">
+        <h3 class="orange">Spectral Gap & Contagion</h3>
+        <ul>
+          <li>Mixing time ∝ <strong>1/λ₂</strong></li>
+          <li>Small gap → slow mixing → <strong>isolated clusters</strong></li>
+          <li>Large gap → fast mixing → <strong>rapid contagion</strong></li>
+          <li>Paradox: robust network = fast contagion!</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 12: DIFFUSION ====== -->
+<div class="slide" data-index="11">
+  <div class="slide-num">11 / Diffusion</div>
+  <span class="section-tag red">Contagion</span>
+  <h2>Heat Diffusion & <span>Shock Propagation</span></h2>
+  <div class="two-col">
+    <div>
+      <div class="math-block">
+        <span class="keyword">Heat Equation on Graph:</span><br>
+        ∂u/∂t = −L · u<br><br>
+        <span class="keyword">Solution:</span><br>
+        <span class="highlight">u(t) = exp(−tL) · u(0)</span><br><br>
+        <span class="comment">u(0) = initial shock vector</span><br>
+        <span class="comment">u(t) = shock distribution at time t</span><br><br>
+        <span class="keyword">Eigendecomposition:</span><br>
+        u(t) = Σ<sub>k</sub> exp(−λ<sub>k</sub>t) · (v<sub>k</sub><sup>T</sup>u₀) · v<sub>k</sub><br><br>
+        <span class="comment">Each eigenmode decays at rate λ<sub>k</sub></span><br>
+        <span class="comment">λ₂ governs the slowest non-trivial decay</span>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-red">
+        <h3 style="color:var(--red)">Lehman Brothers (2008)</h3>
+        <ul>
+          <li>Initial shock: u(0) = [0,...,1,...,0] at Lehman</li>
+          <li>t=0.001: shock reaches <strong>AIG, GS</strong> (direct CDS exposure)</li>
+          <li>t=0.01: shock spreads to <strong>all US banks</strong></li>
+          <li>t=0.1: approaches <strong>stationary</strong> — entire system affected</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <canvas id="canvas-diffusion" class="demo-canvas" width="440" height="300"></canvas>
+      <div class="demo-controls">
+        <button class="demo-btn red active" onclick="diffusionDemo('lehman')">Shock: Lehman</button>
+        <button class="demo-btn orange" onclick="diffusionDemo('aig')">Shock: AIG</button>
+        <button class="demo-btn" onclick="diffusionDemo('eubanks')">Shock: EU Banks</button>
+        <button class="demo-btn teal" onclick="diffusionDemo('reset')">Reset</button>
+      </div>
+      <div class="demo-readout" id="diffusion-readout">
+        Click a shock scenario to see contagion propagation.<br>
+        <span class="val2">Darker red = more shock absorbed</span>. Use slider for time.
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+        <span style="font-family:'IBM Plex Mono';font-size:11px;color:var(--text-dim);">t=0</span>
+        <input type="range" id="diffusion-slider" min="0" max="100" value="0"
+          style="flex:1;accent-color:var(--red);" oninput="updateDiffusion()">
+        <span style="font-family:'IBM Plex Mono';font-size:11px;color:var(--text-dim);">t=0.1</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 13: RANDOM WALKS ====== -->
+<div class="slide" data-index="12">
+  <div class="slide-num">12 / Random Walks</div>
+  <span class="section-tag purple">Random Walks</span>
+  <h2>Random Walks on <span>Financial Networks</span></h2>
+  <div class="two-col">
+    <div>
+      <div class="math-block">
+        <span class="keyword">Transition Matrix:</span><br>
+        <span class="highlight">P = D<sup>−1</sup>A</span><br>
+        P<sub>ij</sub> = A<sub>ij</sub> / d<sub>i</sub><br><br>
+        <span class="comment">"Probability of walking from i to j</span><br>
+        <span class="comment"> proportional to edge weight"</span><br><br>
+        <span class="keyword">Stationary Distribution:</span><br>
+        π<sub>i</sub> = d<sub>i</sub> / (2 · total_weight)<br><br>
+        <span class="comment">For undirected graphs: degree-proportional</span><br>
+        <span class="comment">π = where a random walker spends most time</span><br><br>
+        <span class="keyword">Mean Return Time:</span><br>
+        E[T<sub>i→i</sub>] = 1/π<sub>i</sub><br>
+        <span class="comment">High-degree nodes: short return → "attractors"</span>
+      </div>
+    </div>
+    <div>
+      <div class="card accent-left-purple">
+        <h3 class="purple">Financial Interpretation</h3>
+        <ul>
+          <li><strong>P<sub>ij</sub></strong> = probability a shock at i propagates to j next</li>
+          <li><strong>π<sub>i</sub></strong> = long-run fraction of risk absorbed by institution i</li>
+          <li>Institutions with high π are <strong>risk sinks</strong></li>
+          <li>Mean return time 1/π<sub>i</sub> = how quickly risk <strong>cycles back</strong></li>
+        </ul>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-orange">
+        <h3 class="orange">Communicability</h3>
+        <div class="math-block" style="font-size:13px;">
+          <span class="keyword">Estrada Communicability:</span><br>
+          G<sub>ij</sub> = (exp(A))<sub>ij</sub> = Σ<sub>k=0</sub><sup>∞</sup> (A<sup>k</sup>)<sub>ij</sub> / k!<br><br>
+          <span class="comment">Counts ALL walks, weighted by 1/k!</span><br>
+          <span class="comment">Captures TOTAL indirect exposure</span><br><br>
+          <span class="keyword">Finance:</span> two institutions may have<br>
+          small direct exposure but massive<br>
+          <span class="highlight">indirect exposure</span> through intermediaries
+        </div>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-teal">
+        <h3 class="teal">Effective Resistance</h3>
+        <ul>
+          <li>R<sub>eff</sub>(i,j) = (e<sub>i</sub>−e<sub>j</sub>)<sup>T</sup> L<sup>+</sup> (e<sub>i</sub>−e<sub>j</sub>)</li>
+          <li>Low R<sub>eff</sub> = many redundant paths = <strong>robust</strong> link</li>
+          <li>Kirchhoff index = Σ R<sub>eff</sub> = total system fragility</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 13.5: COMMUNICABILITY DEEP DIVE ====== -->
+<div class="slide" data-index="13">
+  <div class="slide-num">13 / Communicability</div>
+  <span class="section-tag orange">Deep Dive</span>
+  <h2>Why <span>exp(A)</span> = Communicability</h2>
+  <div class="two-col">
+    <div>
+      <div class="card accent-left-orange">
+        <h3 class="orange">From Walk Counts to Matrix Exponential</h3>
+        <ul>
+          <li>We know <strong>A<sup>k</sup>[i][j]</strong> = number of walks of length k from i to j</li>
+          <li>Sum them <strong>all at once</strong>, with a length penalty:</li>
+        </ul>
+        <div class="math-block">
+          <span class="highlight">[e<sup>A</sup>]<sub>ij</sub> = Σ<sub>k=0</sub><sup>∞</sup> (A<sup>k</sup>)<sub>ij</sub> / k!</span><br><br>
+          <span class="comment">= Σ (length-k walk count) / k!</span><br><br>
+          <span class="keyword">k! in the denominator is the key:</span><br>
+          <span class="comment">Longer walks are exponentially discounted</span><br>
+          <span class="comment">→ direct connections dominate the sum</span>
+        </div>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-red">
+        <h3 style="color:var(--red)">Why k! and not something else?</h3>
+        <ul>
+          <li>Naive sum <strong>Σ A<sup>k</sup></strong> diverges when spectral radius λ₁ > 1</li>
+          <li>Katz uses <strong>α<sup>k</sup></strong> — but requires tuning α < 1/λ₁</li>
+          <li><strong>k!</strong> guarantees convergence for <strong>any</strong> matrix A</li>
+          <li>Information-theoretic meaning: "info transmitted through k intermediaries is diluted by k! possible orderings"</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card accent-left-purple">
+        <h3 class="purple">Spectral Decomposition — The Deeper View</h3>
+        <div class="math-block">
+          <span class="keyword">Eigendecomposition:</span><br>
+          A = Q Λ Q<sup>T</sup><br><br>
+          <span class="keyword">Therefore:</span><br>
+          <span class="highlight">exp(A) = Q · diag(e<sup>λ₁</sup>, e<sup>λ₂</sup>, ...) · Q<sup>T</sup></span><br><br>
+          <span class="keyword">Element-wise:</span><br>
+          [exp(A)]<sub>ij</sub> = Σ<sub>k</sub> e<sup>λ<sub>k</sub></sup> · q<sub>ki</sub> · q<sub>kj</sub><br><br>
+          <span class="comment">Each eigenvector mode contributes</span><br>
+          <span class="comment">weighted by e<sup>λₖ</sup></span>
+        </div>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-teal">
+        <h3 class="teal">Why This Matters</h3>
+        <ul>
+          <li>Modes with <strong>large eigenvalues</strong> = core network structures</li>
+          <li>They get <strong>exponentially amplified</strong> by e<sup>λₖ</sup></li>
+          <li>The dominant eigenvector mode <strong>controls</strong> communicability</li>
+          <li>λ₂ (algebraic connectivity) → larger λ₂ means the <strong>entire graph</strong> has higher communicability</li>
+        </ul>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left">
+        <h3>Finance Implication</h3>
+        <ul>
+          <li>Two banks may have <strong>zero direct exposure</strong></li>
+          <li>But massive <strong>indirect exposure</strong> through walk chains</li>
+          <li>exp(A) captures what the adjacency matrix <strong>misses</strong></li>
+          <li>This is why regulators care about <strong>network topology</strong>, not just bilateral links</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 14: KARATE CLUB ====== -->
+<div class="slide" data-index="14">
+  <div class="slide-num">14 / Community</div>
+  <span class="section-tag red">Community Detection</span>
+  <h2>Zachary's <span>Karate Club</span></h2>
+  <div class="two-col">
+    <div>
+      <canvas id="canvas-karate" class="demo-canvas" width="440" height="340"></canvas>
+      <div class="demo-controls">
+        <button class="demo-btn red active" onclick="karateDemo('truth')">Ground Truth</button>
+        <button class="demo-btn teal" onclick="karateDemo('fiedler')">Fiedler Partition</button>
+        <button class="demo-btn orange" onclick="karateDemo('louvain')">Louvain</button>
+        <button class="demo-btn" onclick="karateDemo('girvan')">Girvan-Newman</button>
+      </div>
+      <div class="demo-readout" id="karate-readout">
+        <span class="val2">Ground truth</span>: Red = Mr. Hi's faction, Blue = Officer's faction.<br>
+        Compare with algorithmic partitions.
+      </div>
+    </div>
+    <div>
+      <div class="card accent-left">
+        <h3>The Classic Dataset</h3>
+        <ul>
+          <li><strong>34 members</strong> of a karate club, <strong>78 ties</strong></li>
+          <li>Club <strong>split</strong> into two factions after a dispute</li>
+          <li>Zachary (1977) predicted the split from <strong>network structure alone</strong></li>
+          <li>The "hello world" of community detection</li>
+        </ul>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-orange">
+        <h3 class="orange">Financial Analogy</h3>
+        <ul>
+          <li>Members → <strong>Stocks / Institutions</strong></li>
+          <li>Social ties → <strong>Correlations / Exposures</strong></li>
+          <li>Two factions → <strong>Sector clusters / Regimes</strong></li>
+          <li>Mr. Hi (node 0) → <strong>"Growth" leader</strong></li>
+          <li>Officer (node 33) → <strong>"Value" leader</strong></li>
+          <li>Club split → <strong>Regime change / Rotation</strong></li>
+        </ul>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-teal">
+        <h3 class="teal">Detection Accuracy</h3>
+        <ul>
+          <li><strong>Fiedler partition</strong>: ~97% accuracy</li>
+          <li><strong>Girvan-Newman</strong>: ~94% accuracy</li>
+          <li><strong>Louvain</strong>: finds 4 sub-communities</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 15: MODULARITY ====== -->
+<div class="slide" data-index="15">
+  <div class="slide-num">15 / Community</div>
+  <span class="section-tag red">Modularity</span>
+  <h2>Modularity as a <span>Regime Indicator</span></h2>
+  <div class="two-col">
+    <div>
+      <div class="math-block">
+        <span class="keyword">Modularity:</span><br>
+        <span class="highlight">Q = (1/2m) Σ<sub>ij</sub> [A<sub>ij</sub> − d<sub>i</sub>d<sub>j</sub>/(2m)] · δ(c<sub>i</sub>, c<sub>j</sub>)</span><br><br>
+        <span class="comment">A<sub>ij</sub> − d<sub>i</sub>d<sub>j</sub>/(2m) = deviation from random graph</span><br>
+        <span class="comment">δ(c<sub>i</sub>, c<sub>j</sub>) = 1 if same community</span><br><br>
+        <span class="keyword">Interpretation:</span><br>
+        Q ∈ [−0.5, 1]<br>
+        Q > 0.3 → significant community structure<br>
+        Q ≈ 0   → no structure (random graph)<br>
+        Q < 0   → anti-community (bipartite-like)
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-red">
+        <h3 style="color:var(--red)">Market Stress → Q Collapse</h3>
+        <ul>
+          <li><strong>Normal times</strong>: Q ≈ 0.5 — clear sector clustering</li>
+          <li><strong>Stress</strong>: cross-sector correlations rise</li>
+          <li><strong>Crisis</strong>: Q → 0 — everything correlated</li>
+          <li><strong>"Correlations go to 1 in a crash"</strong></li>
+          <li>Monitoring Q over time → <strong>regime change detector</strong></li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <canvas id="canvas-modularity" class="demo-canvas" width="440" height="260"></canvas>
+      <div class="demo-controls">
+        <button class="demo-btn active" onclick="modularityDemo('normal')">Normal Market</button>
+        <button class="demo-btn orange" onclick="modularityDemo('stress')">Mild Stress</button>
+        <button class="demo-btn red" onclick="modularityDemo('crisis')">Crisis</button>
+      </div>
+      <div class="demo-readout" id="modularity-readout">
+        <span class="val">Normal market</span>: clear sector clusters, Q ≈ 0.52
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-teal">
+        <h3 class="teal">Louvain Algorithm</h3>
+        <ul>
+          <li><strong>Phase 1</strong>: greedily assign nodes to communities that maximize ΔQ</li>
+          <li><strong>Phase 2</strong>: collapse communities into super-nodes</li>
+          <li>Repeat until no improvement → O(n log n)</li>
+          <li>The most widely used community detection method</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 16: ADJACENCY A — 4 CONCEPTS ====== -->
+<div class="slide" data-index="16">
+  <div class="slide-num">16 / Synthesis — Adjacency</div>
+  <span class="section-tag">Matrix A</span>
+  <h2>Adjacency Matrix: <span>Who is Connected</span></h2>
+  <p style="color:var(--text-dim);font-size:14px;margin-bottom:16px;">Think of A as the <strong>phone book</strong> of the financial system. A<sub>ij</sub> ≠ 0 means "bank i and bank j have a direct relationship." Everything below is derived from this one table.</p>
+  <div class="two-col">
+    <div>
+      <canvas id="canvas-adjA" class="demo-canvas" width="440" height="360"></canvas>
+      <div class="demo-controls">
+        <button class="demo-btn active" onclick="adjADemo('walks')">A<sup>k</sup> Walk Counts</button>
+        <button class="demo-btn orange" onclick="adjADemo('centrality')">Eigenvector Centrality</button>
+        <button class="demo-btn teal" onclick="adjADemo('communicability')">exp(A) Communicability</button>
+        <button class="demo-btn" onclick="adjADemo('structure')">Direct Structure</button>
+      </div>
+      <div class="demo-readout" id="adjA-readout">
+        Click the buttons to explore each concept visually.
+      </div>
+    </div>
+    <div id="adjA-detail">
+      <div class="card accent-left" id="adjA-card-walks">
+        <h3>① A<sup>k</sup> → Walk Counts</h3>
+        <div class="math-block" style="font-size:13px;">
+          (A²)<sub>ij</sub> = Σ<sub>m</sub> A<sub>im</sub> · A<sub>mj</sub><br>
+          <span class="comment">= number of 2-step paths from i to j</span>
+        </div>
+        <ul>
+          <li><strong>Analogy</strong>: "How many ways can a rumor travel from JPM to Citi through exactly one intermediary?"</li>
+          <li>In finance: A² counts all <strong>indirect bilateral exposures</strong> through one intermediary bank</li>
+          <li>A³ = exposures through <strong>two</strong> intermediaries — these are the "hidden" contagion channels regulators miss</li>
+          <li><strong>Why it matters</strong>: Lehman had small direct exposure to many banks, but massive A² and A³ indirect paths through AIG</li>
+        </ul>
+      </div>
+      <div class="card accent-left-orange" id="adjA-card-centrality" style="display:none;">
+        <h3 class="orange">② Eigenvectors → Centrality</h3>
+        <div class="math-block" style="font-size:13px;">
+          A · x = λ₁ · x<br>
+          <span class="comment">x<sub>i</sub> = importance of node i</span>
+        </div>
+        <ul>
+          <li><strong>Analogy</strong>: "Who is popular among the popular?" — like asking which CEO is most respected <em>by other respected CEOs</em></li>
+          <li>Unlike simple degree (= count of friends), eigenvector centrality says: <strong>it matters WHO your friends are</strong></li>
+          <li>A bank connected to 3 systemically important banks is more dangerous than one connected to 10 small ones</li>
+          <li><strong>Why eigenvectors?</strong> Because the equation Ax = λx is self-consistent — the only vector where "sum of neighbors' importance" equals "scaled self-importance" is the dominant eigenvector</li>
+        </ul>
+      </div>
+      <div class="card accent-left-teal" id="adjA-card-communicability" style="display:none;">
+        <h3 class="teal">③ exp(A) → Communicability</h3>
+        <div class="math-block" style="font-size:13px;">
+          [e<sup>A</sup>]<sub>ij</sub> = Σ<sub>k=0</sub><sup>∞</sup> (A<sup>k</sup>)<sub>ij</sub> / k!<br>
+          <span class="comment">= all walk counts, discounted by length</span>
+        </div>
+        <ul>
+          <li><strong>Analogy</strong>: "Total ability for information to flow from i to j through <em>every possible chain</em>, with longer chains heavily discounted"</li>
+          <li>Walk counts (A<sup>k</sup>) tell you paths exist. Communicability tells you <strong>how much actually gets through</strong></li>
+          <li>Like the telephone game — the message degrades with each relay. k! discount = information loss through k intermediaries</li>
+          <li><strong>Why it matters</strong>: Two banks with zero direct exposure can have <em>huge</em> communicability through shared intermediaries — this is the hidden systemic risk A alone doesn't show</li>
+        </ul>
+      </div>
+      <div class="card accent-left-purple" id="adjA-card-structure" style="display:none;">
+        <h3 class="purple">④ Encodes Direct Structure</h3>
+        <div class="math-block" style="font-size:13px;">
+          A<sub>ij</sub> ≠ 0 ⟺ direct relationship<br>
+          <span class="comment">The "raw data" of the entire network</span>
+        </div>
+        <ul>
+          <li><strong>Analogy</strong>: A is like the <strong>balance sheet</strong> of the financial system — every bilateral relationship in one table</li>
+          <li>From A alone, you can derive: degree (how connected?), density (how interconnected is the whole system?), clustering (do my neighbors know each other?)</li>
+          <li>A is the <strong>foundation</strong> — L and P are both derived from A. If you understand A, you understand the raw wiring of the system</li>
+          <li><strong>Key limitation</strong>: A only shows who is <em>directly</em> connected. The real danger is in indirect paths — that's why we need A<sup>k</sup>, exp(A), and the other matrices</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 17: LAPLACIAN L — 4 CONCEPTS ====== -->
+<div class="slide" data-index="17">
+  <div class="slide-num">17 / Synthesis — Laplacian</div>
+  <span class="section-tag teal">Matrix L</span>
+  <h2>Laplacian: How Things <span>Flow</span></h2>
+  <p style="color:var(--text-dim);font-size:14px;margin-bottom:16px;">If A is the <strong>road map</strong>, L = D − A is the <strong>traffic flow model</strong>. It encodes not just connections, but how shocks, money, and information <em>propagate</em> through those connections.</p>
+  <div class="two-col">
+    <div>
+      <canvas id="canvas-lapL" class="demo-canvas" width="440" height="360"></canvas>
+      <div class="demo-controls">
+        <button class="demo-btn teal active" onclick="lapLDemo('lambda2')">λ₂ Connectivity</button>
+        <button class="demo-btn orange" onclick="lapLDemo('partition')">v₂ Partition</button>
+        <button class="demo-btn red" onclick="lapLDemo('diffusion')">exp(−tL) Diffusion</button>
+        <button class="demo-btn" onclick="lapLDemo('flow')">Flow Structure</button>
+      </div>
+      <div class="demo-readout" id="lapL-readout">
+        Click the buttons to explore each concept visually.
+      </div>
+    </div>
+    <div id="lapL-detail">
+      <div class="card accent-left-teal" id="lapL-card-lambda2">
+        <h3 class="teal">① λ₂ → Algebraic Connectivity</h3>
+        <div class="math-block" style="font-size:13px;">
+          L has eigenvalues 0 = λ₀ ≤ λ₁ ≤ ... ≤ λ<sub>n</sub><br>
+          <span class="highlight">λ₂ = how hard it is to split the network</span>
+        </div>
+        <ul>
+          <li><strong>Analogy</strong>: Imagine the network is a <strong>bridge</strong>. λ₂ measures how many cables you'd have to cut before it collapses into two pieces</li>
+          <li>λ₂ = 0 means the network is <em>already</em> split — the financial system has fragmented into isolated blocs</li>
+          <li>Large λ₂ = resilient. Small λ₂ = one failure away from fragmentation</li>
+          <li><strong>Why economists care</strong>: λ₂ dropping over time → early warning signal. Like watching credit spreads widen — the network is under structural stress</li>
+        </ul>
+      </div>
+      <div class="card accent-left-orange" id="lapL-card-partition" style="display:none;">
+        <h3 class="orange">② v₂ → Network Partition</h3>
+        <div class="math-block" style="font-size:13px;">
+          L · v₂ = λ₂ · v₂<br>
+          <span class="comment">Sign of v₂(i) assigns node i to a group</span>
+        </div>
+        <ul>
+          <li><strong>Analogy</strong>: Imagine stretching a rubber network and seeing where it <strong>naturally wants to tear</strong>. The Fiedler vector v₂ reveals that tear line</li>
+          <li>v₂(i) > 0 → node i is in Group A. v₂(i) < 0 → Group B. The network <em>itself</em> tells you the natural partition</li>
+          <li>In sovereign debt: v₂ might split "Asia+Emerging" from "Europe+US" — revealing the fault line that would crack during a crisis</li>
+          <li><strong>Why it's remarkable</strong>: This is the NP-hard "min-cut" problem solved <em>exactly</em> by computing a single eigenvector. Linear algebra gives you what combinatorics can't</li>
+        </ul>
+      </div>
+      <div class="card accent-left-red" id="lapL-card-diffusion" style="display:none;">
+        <h3 style="color:var(--red)">③ exp(−tL) → Diffusion</h3>
+        <div class="math-block" style="font-size:13px;">
+          u(t) = exp(−tL) · u(0)<br>
+          <span class="comment">Shock at t=0 spreads according to L</span>
+        </div>
+        <ul>
+          <li><strong>Analogy</strong>: Drop a <strong>drop of ink</strong> into water. It spreads outward — fast at first, then slows. The Laplacian governs exactly this spread on a network</li>
+          <li>u(0) = "Lehman defaults" (shock vector). u(t) = how that shock has spread to every bank at time t</li>
+          <li>The spread rate is governed by λ₂: large λ₂ → ink spreads quickly (fast contagion). Small λ₂ → ink stays localized (isolated clusters)</li>
+          <li><strong>The paradox</strong>: a robust network (high λ₂) means shocks spread <em>faster</em>. Robustness against fragmentation = vulnerability to contagion</li>
+        </ul>
+      </div>
+      <div class="card accent-left-purple" id="lapL-card-flow" style="display:none;">
+        <h3 class="purple">④ Encodes Flow Structure</h3>
+        <div class="math-block" style="font-size:13px;">
+          x<sup>T</sup>Lx = Σ<sub>(i,j)∈E</sub> w<sub>ij</sub>(x<sub>i</sub> − x<sub>j</sub>)²<br>
+          <span class="comment">= total "disagreement" across edges</span>
+        </div>
+        <ul>
+          <li><strong>Analogy</strong>: Assign each bank a "temperature" (its stress level). x<sup>T</sup>Lx measures the <strong>total heat difference</strong> across all connections — how "uneven" is stress in the system?</li>
+          <li>If connected banks have <em>similar</em> stress → x<sup>T</sup>Lx is small (stress is "smooth"). If adjacent banks have wildly different stress → x<sup>T</sup>Lx is large (stress is "rough")</li>
+          <li>This is the <strong>smoothness penalty</strong>: L tells you which signals are "natural" on this network (smooth) vs "forced" (rough)</li>
+          <li><strong>Portfolio insight</strong>: a portfolio allocation x has low x<sup>T</sup>Lx when correlated assets get similar weights — the Laplacian encodes which allocations "respect" the correlation structure</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 18: TRANSITION P — 4 CONCEPTS ====== -->
+<div class="slide" data-index="18">
+  <div class="slide-num">18 / Synthesis — Transition</div>
+  <span class="section-tag orange">Matrix P</span>
+  <h2>Transition Matrix: Where Things <span>Go</span></h2>
+  <p style="color:var(--text-dim);font-size:14px;margin-bottom:16px;">P = D<sup>−1</sup>A normalizes each row of A to sum to 1 — turning exposures into <strong>probabilities</strong>. If a shock is at bank i, P<sub>ij</sub> = the probability it jumps to bank j next. This is a <strong>Markov chain</strong> on the network.</p>
+  <div class="two-col">
+    <div>
+      <canvas id="canvas-transP" class="demo-canvas" width="440" height="360"></canvas>
+      <div class="demo-controls">
+        <button class="demo-btn orange active" onclick="transPDemo('stationary')">π Stationary</button>
+        <button class="demo-btn red" onclick="transPDemo('mfpt')">MFPT Contagion</button>
+        <button class="demo-btn teal" onclick="transPDemo('gap')">Spectral Gap</button>
+        <button class="demo-btn" onclick="transPDemo('dynamics')">Dynamics</button>
+      </div>
+      <div class="demo-readout" id="transP-readout">
+        Click the buttons to explore each concept visually.
+      </div>
+    </div>
+    <div id="transP-detail">
+      <div class="card accent-left-orange" id="transP-card-stationary">
+        <h3 class="orange">① Stationary π → Risk Sinks</h3>
+        <div class="math-block" style="font-size:13px;">
+          π<sub>i</sub> = d<sub>i</sub> / 2m<br>
+          <span class="comment">Long-run fraction of time spent at node i</span>
+        </div>
+        <ul>
+          <li><strong>Analogy</strong>: Imagine a <strong>drunk walker</strong> stumbling randomly through the banking network, choosing the next bank proportional to exposure size. After millions of steps, π<sub>i</sub> = fraction of time spent at bank i</li>
+          <li>High π<sub>i</sub> means bank i is a <strong>"gravity well"</strong> — risk keeps getting pulled back there regardless of where it starts</li>
+          <li>In financial networks: π is proportional to <strong>total exposure</strong>. The biggest, most connected banks absorb the most long-run risk</li>
+          <li><strong>Policy insight</strong>: π identifies which banks need the largest <strong>capital buffers</strong> — not because they caused the crisis, but because risk always flows toward them</li>
+        </ul>
+      </div>
+      <div class="card accent-left-red" id="transP-card-mfpt" style="display:none;">
+        <h3 style="color:var(--red)">② MFPT → Contagion Speed</h3>
+        <div class="math-block" style="font-size:13px;">
+          E[T<sub>i→j</sub>] = mean steps from i to j<br>
+          <span class="comment">Expected time for a shock to reach j from i</span>
+        </div>
+        <ul>
+          <li><strong>Analogy</strong>: "If a fire starts in Building A, how many minutes until it reaches Building B?" MFPT is the network equivalent — measured in <strong>propagation steps</strong>, not minutes</li>
+          <li>Short MFPT(i→j) = bank j gets infected <em>quickly</em> from bank i. These are the <strong>fast contagion channels</strong></li>
+          <li>Long MFPT(i→j) = bank j is <em>insulated</em> from bank i — many hops required, shock dissipates along the way</li>
+          <li><strong>Why it matters</strong>: Regulators can map the MFPT matrix to identify which bank pairs are "dangerously close" in network distance, even if they have no direct exposure</li>
+        </ul>
+      </div>
+      <div class="card accent-left-teal" id="transP-card-gap" style="display:none;">
+        <h3 class="teal">③ Spectral Gap → Mixing Time</h3>
+        <div class="math-block" style="font-size:13px;">
+          gap = 1 − |λ₂(P)|<br>
+          <span class="comment">mixing time ∝ 1/gap</span>
+        </div>
+        <ul>
+          <li><strong>Analogy</strong>: Stir cream into <strong>coffee</strong>. A large cup with few channels → slow mixing (cream stays separate for a while). A well-connected cup → fast mixing (cream blends instantly). The spectral gap measures this mixing speed</li>
+          <li>Large gap → the network "forgets" the initial shock quickly — contagion reaches <em>everywhere</em> fast, then equalizes</li>
+          <li>Small gap → the network has <strong>bottlenecks</strong>. Shocks stay trapped in one part, slowly leaking to others. Two "worlds" that barely communicate</li>
+          <li><strong>Market regime reading</strong>: In <em>normal</em> times, markets have a small gap (sectors are distinct). In <em>crisis</em>, the gap widens (everything correlates → one big pot of risk)</li>
+        </ul>
+      </div>
+      <div class="card accent-left-purple" id="transP-card-dynamics" style="display:none;">
+        <h3 class="purple">④ Encodes Dynamics</h3>
+        <div class="math-block" style="font-size:13px;">
+          u(t+1) = P · u(t)<br>
+          <span class="comment">Risk distribution evolves step by step</span>
+        </div>
+        <ul>
+          <li><strong>Analogy</strong>: A and L are <strong>photographs</strong> — they show the network at one instant. P is a <strong>movie</strong> — it shows how things <em>evolve</em> over time</li>
+          <li>Given any initial shock vector u(0), multiply by P repeatedly: u(1) = Pu(0), u(2) = P²u(0), ... This traces the exact path of contagion</li>
+          <li>P converges to the stationary distribution π regardless of starting point — <strong>all roads lead to the same long-run equilibrium</strong></li>
+          <li><strong>The complete picture</strong>: A tells you the <em>wiring</em>. L tells you the <em>flow capacity</em>. P tells you the <em>actual dynamics</em> — where risk is right now, and where it will be tomorrow</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 19: UNIFIED VIEW ====== -->
+<div class="slide" data-index="19">
+  <div class="slide-num">19 / Synthesis — Unified</div>
+  <span class="section-tag purple">Unified View</span>
+  <h2>Three Matrices, <span>One Network</span></h2>
+  <div class="three-col">
+    <div class="card accent-left">
+      <h3>A = Who is connected</h3>
+      <ul>
+        <li><strong>A<sup>k</sup></strong> → indirect exposure paths</li>
+        <li><strong>Eigenvectors</strong> → recursive importance</li>
+        <li><strong>exp(A)</strong> → total communicability</li>
+        <li>The <strong>raw wiring</strong> diagram</li>
+      </ul>
+    </div>
+    <div class="card accent-left-teal">
+      <h3 class="teal">L = How things flow</h3>
+      <ul>
+        <li><strong>λ₂</strong> → fragmentation resilience</li>
+        <li><strong>v₂</strong> → natural fault lines</li>
+        <li><strong>exp(−tL)</strong> → shock diffusion</li>
+        <li>The <strong>plumbing</strong> blueprint</li>
+      </ul>
+    </div>
+    <div class="card accent-left-orange">
+      <h3 class="orange">P = Where things go</h3>
+      <ul>
+        <li><strong>π</strong> → long-run risk concentration</li>
+        <li><strong>MFPT</strong> → contagion travel time</li>
+        <li><strong>Gap</strong> → system mixing speed</li>
+        <li>The <strong>traffic model</strong></li>
+      </ul>
+    </div>
+  </div>
+  <div class="gap"></div>
+  <div class="card" style="background:var(--surface2);">
+    <h3 class="purple">The Mathematical Thread</h3>
+    <div class="math-block">
+      <span class="keyword">All derived from A:</span><br><br>
+      <span class="highlight">L = D − A</span> &nbsp;&nbsp;&nbsp; <span class="comment">subtract adjacency from degree → get flow</span><br>
+      <span class="highlight">P = D<sup>−1</sup>A</span> &nbsp;&nbsp;&nbsp; <span class="comment">normalize adjacency by degree → get probabilities</span><br>
+      <span class="highlight">L<sub>rw</sub> = I − P</span> &nbsp;&nbsp;&nbsp; <span class="comment">Laplacian and transition are two sides of the same coin</span><br><br>
+      <span class="keyword">One network, three questions:</span><br>
+      A → "Who talks to whom?" &nbsp;|&nbsp; L → "Where does it crack?" &nbsp;|&nbsp; P → "Where does risk end up?"
+    </div>
+  </div>
+  <div class="gap"></div>
+  <div class="quote-block">
+    "The adjacency matrix records the bilateral claims. The Laplacian reveals the fault lines. The transition matrix predicts where the fire goes next. Together, they are the complete language of financial contagion."
+    <cite>— Synthesis</cite>
+  </div>
+</div>
+
+<!-- ====== SLIDE 20: APPLICATIONS ====== -->
+<div class="slide" data-index="20">
+  <div class="slide-num">20 / Applications</div>
+  <span class="section-tag orange">Practice</span>
+  <h2>Applications in <span>Finance Research</span></h2>
+  <div class="two-col">
+    <div>
+      <div class="card accent-left">
+        <h3>Systemic Risk Measurement</h3>
+        <ul>
+          <li><strong>Billio et al. (2012)</strong>: Granger-causality networks + eigenvector centrality</li>
+          <li><strong>Diebold & Yılmaz (2014)</strong>: variance decomposition → network connectedness</li>
+          <li><strong>Acemoglu et al. (2015)</strong>: idiosyncratic shocks + network propagation → aggregate fluctuations</li>
+        </ul>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-teal">
+        <h3 class="teal">Portfolio Construction</h3>
+        <ul>
+          <li><strong>Mantegna (1999)</strong>: MST from correlation → hierarchical sector structure</li>
+          <li><strong>Peralta & Zareei (2016)</strong>: Laplacian-based portfolio → spectral risk parity</li>
+          <li><strong>Marti et al. (2021)</strong>: community detection → data-driven sector allocation</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card accent-left-orange">
+        <h3 class="orange">Contagion & Crises</h3>
+        <ul>
+          <li><strong>Allen & Gale (2000)</strong>: complete vs incomplete networks → fragility</li>
+          <li><strong>Cont & Schaanning (2019)</strong>: fire-sale externalities + community structure</li>
+          <li><strong>Greenwood & Thesmar (2011)</strong>: portfolio overlap → price fragility</li>
+        </ul>
+      </div>
+      <div class="gap"></div>
+      <div class="card accent-left-purple">
+        <h3 class="purple">Open Questions</h3>
+        <ul>
+          <li>How to construct networks from <strong>high-frequency</strong> data?</li>
+          <li><strong>Dynamic networks</strong>: time-varying λ₂ as early warning</li>
+          <li><strong>Multilayer networks</strong>: equity + debt + derivatives</li>
+          <li><strong>Causal</strong> vs correlational network structures</li>
+          <li>Network effects on <strong>asset pricing</strong> (network beta)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 21: SUMMARY ====== -->
+<div class="slide" data-index="21">
+  <div class="slide-num">21 / Summary</div>
+  <span class="section-tag">Takeaway</span>
+  <h2>Key <span>Takeaways</span></h2>
+  <div class="three-col">
+    <div class="card accent-left">
+      <div class="big-stat" style="font-size:36px;">A, L, P</div>
+      <h3>Three Matrices</h3>
+      <ul>
+        <li><strong>A</strong>: structure & centrality</li>
+        <li><strong>L</strong>: flow & robustness</li>
+        <li><strong>P</strong>: dynamics & mixing</li>
+      </ul>
+    </div>
+    <div class="card accent-left-teal">
+      <div class="big-stat teal" style="font-size:36px;">λ₂</div>
+      <h3 class="teal">One Number</h3>
+      <ul>
+        <li>Algebraic connectivity</li>
+        <li>Network <strong>fragility</strong></li>
+        <li>Monitor over time</li>
+        <li>Early warning signal</li>
+      </ul>
+    </div>
+    <div class="card accent-left-orange">
+      <div class="big-stat orange" style="font-size:36px;">Q</div>
+      <h3 class="orange">Modularity</h3>
+      <ul>
+        <li>Community structure</li>
+        <li>Regime <strong>detection</strong></li>
+        <li>Q collapse = crisis</li>
+        <li>Data-driven sectors</li>
+      </ul>
+    </div>
+  </div>
+  <div class="gap"></div>
+  <div class="quote-block">
+    "Graph theory provides a natural language for the two central questions of financial stability: which institutions matter most, and how do shocks propagate?"
+    <cite>— Course Summary</cite>
+  </div>
+  <div class="gap"></div>
+  <div class="card" style="text-align:center;background:var(--surface2);">
+    <p style="font-family:'IBM Plex Mono';font-size:13px;color:var(--text-dim);">
+      Practice code: <code>networkX/01_graphs_and_edges.py</code> through <code>06_advanced_spectral.py</code>
+    </p>
+  </div>
+</div>
+
+</div><!-- end deck -->
+
+<div class="progress" id="progress"></div>
+<div class="nav-hint">← → or click to navigate</div>
+
+<script>
+// ========== SLIDE ENGINE ==========
+const slides = document.querySelectorAll('.slide');
+let current = 0;
+const total = slides.length;
+
+function goTo(idx) {
+  if (idx < 0 || idx >= total) return;
+  slides[current].classList.remove('active');
+  current = idx;
+  slides[current].classList.add('active');
+  document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+  // Reinitialize canvases when navigating to their slides
+  const slideIdx = parseInt(slides[current].dataset.index);
+  if (slideIdx === 2) initGraphDemo();
+  if (slideIdx === 5) initCentralityDemo();
+  if (slideIdx === 8) initFiedlerDemo();
+  if (slideIdx === 10) initSpectrumDemo();
+  if (slideIdx === 11) initDiffusionDemo();
+  if (slideIdx === 14) initKarateDemo();
+  if (slideIdx === 15) initModularityDemo();
+  if (slideIdx === 16) initAdjADemo();
+  if (slideIdx === 17) initLapLDemo();
+  if (slideIdx === 18) initTransPDemo();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(current - 1); }
+  if (e.key === 'Home') goTo(0);
+  if (e.key === 'End') goTo(total - 1);
+});
+
+document.addEventListener('click', e => {
+  if (e.target.closest('.demo-btn, .demo-canvas, input, button, .demo-controls')) return;
+  const x = e.clientX;
+  if (x > window.innerWidth * 0.5) goTo(current + 1);
+  else goTo(current - 1);
+});
+
+// ========== BACKGROUND CANVAS ==========
+const bgC = document.getElementById('bg-canvas');
+const bgCtx = bgC.getContext('2d');
+function resizeBg() { bgC.width = window.innerWidth; bgC.height = window.innerHeight; }
+resizeBg();
+window.addEventListener('resize', resizeBg);
+
+const bgNodes = Array.from({length: 40}, () => ({
+  x: Math.random() * bgC.width, y: Math.random() * bgC.height,
+  vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3,
+  r: 2 + Math.random() * 2
+}));
+
+function drawBg() {
+  bgCtx.clearRect(0, 0, bgC.width, bgC.height);
+  bgNodes.forEach(n => {
+    n.x += n.vx; n.y += n.vy;
+    if (n.x < 0 || n.x > bgC.width) n.vx *= -1;
+    if (n.y < 0 || n.y > bgC.height) n.vy *= -1;
+  });
+  bgCtx.strokeStyle = 'rgba(59,111,212,0.3)';
+  bgCtx.lineWidth = 0.5;
+  for (let i = 0; i < bgNodes.length; i++) {
+    for (let j = i + 1; j < bgNodes.length; j++) {
+      const dx = bgNodes[i].x - bgNodes[j].x;
+      const dy = bgNodes[i].y - bgNodes[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 150) {
+        bgCtx.globalAlpha = 1 - dist / 150;
+        bgCtx.beginPath();
+        bgCtx.moveTo(bgNodes[i].x, bgNodes[i].y);
+        bgCtx.lineTo(bgNodes[j].x, bgNodes[j].y);
+        bgCtx.stroke();
+      }
+    }
+  }
+  bgCtx.globalAlpha = 1;
+  bgCtx.fillStyle = '#3b6fd4';
+  bgNodes.forEach(n => {
+    bgCtx.beginPath();
+    bgCtx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    bgCtx.fill();
+  });
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+// ========== GRAPH DEMO (Slide 3) ==========
+let graphNodes = [], graphEdges = [], graphSelected = -1, graphType = 'interbank';
+
+function makeInterbank() {
+  const names = ['JPM','GS','Citi','BofA','MS','WF'];
+  const cx = 220, cy = 170, r = 120;
+  graphNodes = names.map((n,i) => ({
+    x: cx + r*Math.cos(i*Math.PI*2/6 - Math.PI/2),
+    y: cy + r*Math.sin(i*Math.PI*2/6 - Math.PI/2),
+    label: n, color: '#3b82f6', size: 18
+  }));
+  graphEdges = [
+    {s:0,t:1,w:12.5,dir:true},{s:0,t:2,w:8.3,dir:true},{s:1,t:4,w:6.7,dir:true},
+    {s:1,t:3,w:4.2,dir:true},{s:2,t:3,w:9.1,dir:true},{s:2,t:5,w:3.8,dir:true},
+    {s:3,t:0,w:7.6,dir:true},{s:4,t:2,w:5.4,dir:true},{s:5,t:0,w:2.9,dir:true},
+    {s:5,t:1,w:4.1,dir:true}
+  ];
+}
+
+function makeCorrelation() {
+  const names = ['AAPL','MSFT','GOOG','JPM','GS','XOM','CVX','JNJ'];
+  const cx = 220, cy = 170, r = 130;
+  graphNodes = names.map((n,i) => {
+    const colors = ['#3b82f6','#3b82f6','#3b82f6','#ef4444','#ef4444','#f59e0b','#f59e0b','#10b981'];
+    return {
+      x: cx + r*Math.cos(i*Math.PI*2/8 - Math.PI/2) + (Math.random()-0.5)*20,
+      y: cy + r*Math.sin(i*Math.PI*2/8 - Math.PI/2) + (Math.random()-0.5)*20,
+      label: n, color: colors[i], size: 16
+    };
+  });
+  graphEdges = [
+    {s:0,t:1,w:0.85},{s:0,t:2,w:0.78},{s:1,t:2,w:0.82},
+    {s:3,t:4,w:0.88},{s:5,t:6,w:0.80},
+    {s:0,t:3,w:0.35},{s:1,t:4,w:0.30},{s:3,t:5,w:0.40},{s:2,t:7,w:0.25}
+  ];
+}
+
+function makeBipartite() {
+  const funds = ['Vanguard','BlackRock','Fidelity','StateStr'];
+  const stocks = ['AAPL','MSFT','JPM','XOM','JNJ'];
+  graphNodes = [];
+  funds.forEach((f,i) => graphNodes.push({x:80, y:40+i*80, label:f, color:'#f59e0b', size:14}));
+  stocks.forEach((s,i) => graphNodes.push({x:360, y:20+i*70, label:s, color:'#3b82f6', size:14}));
+  graphEdges = [
+    {s:0,t:4},{s:0,t:5},{s:0,t:6},{s:0,t:7},
+    {s:1,t:4},{s:1,t:5},{s:1,t:6},{s:1,t:8},
+    {s:2,t:4},{s:2,t:5},{s:2,t:6},{s:2,t:7},
+    {s:3,t:4},{s:3,t:5},{s:3,t:7},{s:3,t:8}
+  ];
+}
+
+function initGraphDemo() { graphDemo(graphType); }
+
+function graphDemo(type) {
+  graphType = type;
+  document.querySelectorAll('#canvas-graph ~ .demo-controls .demo-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (type === 'interbank') makeInterbank();
+  else if (type === 'correlation') makeCorrelation();
+  else makeBipartite();
+  graphSelected = -1;
+  drawGraph();
+}
+
+function drawGraph() {
+  const c = document.getElementById('canvas-graph');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+
+  // Edges
+  graphEdges.forEach(e => {
+    const s = graphNodes[e.s], t = graphNodes[e.t];
+    ctx.beginPath();
+    ctx.moveTo(s.x, s.y);
+    ctx.lineTo(t.x, t.y);
+    const w = e.w ? Math.max(1, e.w * 3) : 1.5;
+    ctx.lineWidth = w;
+    ctx.strokeStyle = (graphSelected >= 0 && (e.s === graphSelected || e.t === graphSelected))
+      ? '#e07b39' : 'rgba(59,111,212,0.35)';
+    ctx.stroke();
+    // Arrow for directed
+    if (e.dir) {
+      const angle = Math.atan2(t.y - s.y, t.x - s.x);
+      const dist = Math.sqrt((t.x-s.x)**2 + (t.y-s.y)**2);
+      const ax = s.x + (dist - 22) * Math.cos(angle);
+      const ay = s.y + (dist - 22) * Math.sin(angle);
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(ax - 10*Math.cos(angle-0.3), ay - 10*Math.sin(angle-0.3));
+      ctx.lineTo(ax - 10*Math.cos(angle+0.3), ay - 10*Math.sin(angle+0.3));
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(59,111,212,0.5)';
+      ctx.fill();
+    }
+    // Weight label
+    if (e.w) {
+      const mx = (s.x + t.x) / 2, my = (s.y + t.y) / 2;
+      ctx.fillStyle = '#8899b0';
+      ctx.font = '10px IBM Plex Mono';
+      ctx.textAlign = 'center';
+      ctx.fillText(e.w.toFixed(e.w < 1 ? 2 : 1), mx, my - 6);
+    }
+  });
+
+  // Nodes
+  graphNodes.forEach((n, i) => {
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.size, 0, Math.PI * 2);
+    ctx.fillStyle = i === graphSelected ? '#e07b39' : n.color;
+    ctx.fill();
+    ctx.strokeStyle = '#0a0e17';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${n.size > 16 ? 11 : 10}px IBM Plex Mono`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, n.x, n.y);
+  });
+}
+
+document.getElementById('canvas-graph')?.addEventListener('click', function(e) {
+  const rect = this.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  graphSelected = -1;
+  graphNodes.forEach((n, i) => {
+    if (Math.sqrt((mx-n.x)**2 + (my-n.y)**2) < n.size + 4) graphSelected = i;
+  });
+  drawGraph();
+  const readout = document.getElementById('graph-readout');
+  if (graphSelected >= 0) {
+    const node = graphNodes[graphSelected];
+    const degree = graphEdges.filter(e => e.s === graphSelected || e.t === graphSelected).length;
+    const neighbors = [...new Set(graphEdges.filter(e => e.s === graphSelected || e.t === graphSelected)
+      .map(e => e.s === graphSelected ? graphNodes[e.t].label : graphNodes[e.s].label))];
+    readout.innerHTML = `<span class="val2">${node.label}</span>: degree = <span class="val">${degree}</span>, neighbors = ${neighbors.join(', ')}`;
+  } else {
+    readout.innerHTML = `Click a node to see its <span class="val">degree</span> and connections`;
+  }
+  e.stopPropagation();
+});
+
+// ========== CENTRALITY DEMO (Slide 6) ==========
+let centralityCur = 'degree';
+const centralityData = {
+  nodes: [
+    {label:'JPM',x:220,y:100,sector:'Fin',deg:0.87,btw:0.19,cls:0.72,eig:0.38},
+    {label:'GS',x:340,y:140,sector:'Fin',deg:0.73,btw:0.12,cls:0.67,eig:0.36},
+    {label:'AAPL',x:100,y:160,sector:'Tech',deg:0.73,btw:0.14,cls:0.68,eig:0.35},
+    {label:'MSFT',x:160,y:250,sector:'Tech',deg:0.67,btw:0.09,cls:0.65,eig:0.33},
+    {label:'XOM',x:300,y:260,sector:'Ener',deg:0.60,btw:0.16,cls:0.61,eig:0.29},
+    {label:'UNH',x:380,y:300,sector:'Hlth',deg:0.53,btw:0.11,cls:0.58,eig:0.24},
+    {label:'JNJ',x:120,y:330,sector:'Hlth',deg:0.47,btw:0.08,cls:0.55,eig:0.21},
+    {label:'NVDA',x:60,y:80,sector:'Tech',deg:0.60,btw:0.07,cls:0.59,eig:0.30},
+    {label:'BAC',x:400,y:200,sector:'Fin',deg:0.53,btw:0.06,cls:0.56,eig:0.27},
+  ],
+  edges: [
+    [0,1],[0,2],[0,4],[0,8],[1,2],[1,4],[1,8],[2,3],[2,7],[3,7],[3,6],
+    [4,5],[4,0],[5,6],[5,8],[6,3],[7,2],[8,1],[0,5],[3,4]
+  ]
+};
+
+function initCentralityDemo() { drawCentrality(); }
+
+function centralityMode(mode) {
+  centralityCur = mode;
+  document.querySelectorAll('#canvas-centrality ~ .demo-controls .demo-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  drawCentrality();
+  const names = {degree:'degree',betweenness:'betweenness',closeness:'closeness',eigenvector:'eigenvector'};
+  const colors = {degree:'val',betweenness:'val2',closeness:'val3',eigenvector:'val'};
+  document.getElementById('centrality-readout').innerHTML =
+    `Nodes sized by <span class="${colors[mode]}">${names[mode]} centrality</span>. Click a node for details.`;
+}
+
+function drawCentrality() {
+  const c = document.getElementById('canvas-centrality');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  const d = centralityData;
+  const key = {degree:'deg',betweenness:'btw',closeness:'cls',eigenvector:'eig'}[centralityCur];
+  const sectorColor = {Tech:'#3b82f6',Fin:'#ef4444',Ener:'#f59e0b',Hlth:'#10b981'};
+
+  // Edges
+  ctx.strokeStyle = 'rgba(59,111,212,0.2)';
+  ctx.lineWidth = 1;
+  d.edges.forEach(([i,j]) => {
+    ctx.beginPath();
+    ctx.moveTo(d.nodes[i].x, d.nodes[i].y);
+    ctx.lineTo(d.nodes[j].x, d.nodes[j].y);
+    ctx.stroke();
+  });
+
+  // Nodes
+  d.nodes.forEach(n => {
+    const val = n[key];
+    const size = 12 + val * 30;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, size, 0, Math.PI * 2);
+    ctx.fillStyle = sectorColor[n.sector];
+    ctx.globalAlpha = 0.7;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#0a0e17';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 10px IBM Plex Mono';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, n.x, n.y - 2);
+    ctx.font = '9px IBM Plex Mono';
+    ctx.fillStyle = '#ccc';
+    ctx.fillText(val.toFixed(2), n.x, n.y + 10);
+  });
+}
+
+// ========== FIEDLER DEMO (Slide 9) ==========
+let fiedlerMode2 = 'partition';
+const fiedlerNodes = [
+  {label:'US',x:180,y:120,v2:0.08,region:'Am'},{label:'UK',x:280,y:80,v2:0.22,region:'EU'},
+  {label:'DE',x:350,y:130,v2:0.42,region:'EU'},{label:'FR',x:320,y:200,v2:0.38,region:'EU'},
+  {label:'JP',x:120,y:200,v2:-0.12,region:'As'},{label:'CN',x:60,y:140,v2:-0.48,region:'As'},
+  {label:'KR',x:80,y:240,v2:-0.41,region:'As'},{label:'BR',x:140,y:60,v2:-0.37,region:'Am'},
+  {label:'IT',x:380,y:260,v2:0.31,region:'EU'},{label:'ES',x:260,y:270,v2:0.28,region:'EU'},
+];
+const fiedlerEdges = [[0,1],[0,4],[0,2],[0,5],[0,6],[1,2],[1,3],[1,4],[1,8],[1,9],[2,3],[2,8],[2,9],[2,4],[3,8],[3,9],[3,4],[4,5],[4,6],[5,6],[5,7],[8,9],[0,7]];
+
+function initFiedlerDemo() { drawFiedler(); }
+
+function fiedlerDemo(mode) {
+  fiedlerMode2 = mode;
+  document.querySelectorAll('#canvas-fiedler ~ .demo-controls .demo-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  drawFiedler();
+  const readout = document.getElementById('fiedler-readout');
+  if (mode === 'partition') readout.innerHTML = 'Colored by <span class="val3">Fiedler vector</span> sign. Blue (+) vs Red (−) = natural fault line.';
+  else if (mode === 'remove') readout.innerHTML = 'Click an <span class="val2">edge</span> to remove it and see λ₂ change.';
+  else readout.innerHTML = 'As cross-group correlations increase, <span class="val3">λ₂ rises</span> (paradoxically more connected = faster contagion).';
+}
+
+function drawFiedler() {
+  const c = document.getElementById('canvas-fiedler');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+
+  ctx.strokeStyle = 'rgba(78,204,163,0.25)';
+  ctx.lineWidth = 1.5;
+  fiedlerEdges.forEach(([i,j]) => {
+    ctx.beginPath();
+    ctx.moveTo(fiedlerNodes[i].x, fiedlerNodes[i].y);
+    ctx.lineTo(fiedlerNodes[j].x, fiedlerNodes[j].y);
+    ctx.stroke();
+  });
+
+  fiedlerNodes.forEach(n => {
+    const size = 14 + Math.abs(n.v2) * 16;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, size, 0, Math.PI * 2);
+    ctx.fillStyle = n.v2 >= 0 ? '#3b82f6' : '#ef4444';
+    ctx.globalAlpha = 0.75;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#0a0e17';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px IBM Plex Mono';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, n.x, n.y);
+  });
+
+  // λ₂ display
+  ctx.fillStyle = '#4ecca3';
+  ctx.font = 'bold 13px IBM Plex Mono';
+  ctx.textAlign = 'left';
+  ctx.fillText('λ₂ = 142.3 (algebraic connectivity)', 10, 290);
+}
+
+// ========== SPECTRUM DEMO (Slide 11) ==========
+function initSpectrumDemo() { drawSpectrum('sovereign'); }
+
+function spectrumDemo(type) {
+  document.querySelectorAll('#canvas-spectrum ~ .demo-controls .demo-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  drawSpectrum(type);
+}
+
+function drawSpectrum(type) {
+  const c = document.getElementById('canvas-spectrum');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+
+  let evals, labels;
+  if (type === 'sovereign') {
+    evals = [0, 142, 285, 410, 520, 680, 850, 1020, 1250, 1580];
+    labels = ['λ₀','λ₁','λ₂','λ₃','λ₄','λ₅','λ₆','λ₇','λ₈','λ₉'];
+  } else if (type === 'cds') {
+    evals = [0, 85, 165, 230, 310, 395, 480, 550, 640, 720, 830];
+    labels = ['λ₀','λ₁','λ₂','λ₃','λ₄','λ₅','λ₆','λ₇','λ₈','λ₉','λ₁₀'];
+  } else {
+    evals = [0, 0.8, 1.5, 2.1, 2.8, 3.4, 4.0, 4.5, 5.2, 5.8, 6.3, 7.0, 7.5, 8.2, 8.8, 9.5, 10.1, 11.0, 12.5, 15.2];
+    labels = evals.map((_,i) => `λ_${i}`);
+  }
+
+  const n = evals.length;
+  const maxVal = Math.max(...evals);
+  const barW = Math.min(30, (c.width - 60) / n - 4);
+  const chartH = 220;
+  const offsetX = 30;
+  const offsetY = 250;
+
+  evals.forEach((v, i) => {
+    const x = offsetX + i * (barW + 4);
+    const h = maxVal > 0 ? (v / maxVal) * chartH : 0;
+    ctx.fillStyle = i === 0 ? '#334155' : i === 1 ? '#10b981' : '#3b6fd4';
+    ctx.fillRect(x, offsetY - h, barW, h);
+    ctx.strokeStyle = '#0a0e17';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, offsetY - h, barW, h);
+
+    ctx.fillStyle = '#8899b0';
+    ctx.font = '9px IBM Plex Mono';
+    ctx.textAlign = 'center';
+    ctx.save();
+    ctx.translate(x + barW/2, offsetY + 12);
+    ctx.rotate(-0.4);
+    ctx.fillText(labels[i], 0, 0);
+    ctx.restore();
+
+    if (i <= 2 || i === n-1) {
+      ctx.fillStyle = i === 1 ? '#10b981' : '#8899b0';
+      ctx.font = '10px IBM Plex Mono';
+      ctx.textAlign = 'center';
+      ctx.fillText(type === 'correlation' ? v.toFixed(1) : Math.round(v), x + barW/2, offsetY - h - 6);
+    }
+  });
+
+  // Axis
+  ctx.strokeStyle = '#1e2d45';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(offsetX - 5, offsetY);
+  ctx.lineTo(offsetX + n * (barW + 4), offsetY);
+  ctx.stroke();
+
+  const readout = document.getElementById('spectrum-readout');
+  readout.innerHTML = `<span class="val3">λ₂ = ${type === 'correlation' ? evals[1].toFixed(1) : Math.round(evals[1])}</span> (Fiedler value). ${n} eigenvalues total. Gap ratio: λ₂/λ_max = ${(evals[1]/evals[n-1]).toFixed(3)}`;
+}
+
+// ========== DIFFUSION DEMO (Slide 12) ==========
+let diffShock = 'lehman';
+const diffNodes = [
+  {label:'JPM',x:220,y:80},{label:'GS',x:340,y:100},{label:'MS',x:380,y:190},
+  {label:'Citi',x:300,y:250},{label:'BAC',x:180,y:240},
+  {label:'HSBC',x:60,y:100},{label:'DB',x:80,y:200},{label:'BNP',x:140,y:160},
+  {label:'AIG',x:280,y:160},{label:'MetLife',x:140,y:260},
+  {label:'Lehman',x:400,y:260}
+];
+const diffEdges = [[0,1],[0,2],[0,3],[0,5],[0,8],[1,2],[1,6],[1,8],[1,10],[2,3],[2,10],[2,9],[3,4],[3,7],[3,8],[4,8],[4,9],[5,6],[5,7],[6,7],[6,10],[7,8],[8,9],[8,10],[3,10]];
+
+function initDiffusionDemo() { drawDiffusion(); }
+
+function diffusionDemo(type) {
+  diffShock = type;
+  document.querySelectorAll('#canvas-diffusion ~ .demo-controls .demo-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('diffusion-slider').value = type === 'reset' ? 0 : 30;
+  drawDiffusion();
+}
+
+function updateDiffusion() { drawDiffusion(); }
+
+function drawDiffusion() {
+  const c = document.getElementById('canvas-diffusion');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+
+  const t = parseInt(document.getElementById('diffusion-slider').value) / 1000;
+
+  // Simple diffusion simulation
+  let shock = new Array(diffNodes.length).fill(0);
+  if (diffShock === 'lehman') shock[10] = 1;
+  else if (diffShock === 'aig') shock[8] = 1;
+  else if (diffShock === 'eubanks') { shock[5] = 0.33; shock[6] = 0.33; shock[7] = 0.33; }
+
+  // Simple iterative diffusion
+  const steps = Math.floor(t * 500);
+  for (let s = 0; s < steps; s++) {
+    const newShock = [...shock];
+    diffNodes.forEach((_, i) => {
+      const neighbors = diffEdges.filter(e => e[0] === i || e[1] === i)
+        .map(e => e[0] === i ? e[1] : e[0]);
+      if (neighbors.length > 0) {
+        let avg = neighbors.reduce((sum, j) => sum + shock[j], 0) / neighbors.length;
+        newShock[i] = shock[i] * 0.85 + avg * 0.15;
+      }
+    });
+    shock = newShock;
+  }
+
+  // Normalize
+  const maxS = Math.max(...shock, 0.001);
+
+  // Edges
+  diffEdges.forEach(([i,j]) => {
+    ctx.beginPath();
+    ctx.moveTo(diffNodes[i].x, diffNodes[i].y);
+    ctx.lineTo(diffNodes[j].x, diffNodes[j].y);
+    ctx.strokeStyle = 'rgba(239,68,68,0.15)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // Nodes
+  diffNodes.forEach((n, i) => {
+    const intensity = shock[i] / maxS;
+    const size = 14 + intensity * 10;
+
+    // Glow
+    if (intensity > 0.1) {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, size + 8, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(239,68,68,${intensity * 0.3})`;
+      ctx.fill();
+    }
+
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, size, 0, Math.PI * 2);
+    const r = Math.floor(30 + intensity * 209);
+    const g = Math.floor(30 + (1-intensity) * 90);
+    const b = Math.floor(50 + (1-intensity) * 150);
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fill();
+    ctx.strokeStyle = '#0a0e17';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 9px IBM Plex Mono';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, n.x, n.y);
+  });
+
+  ctx.fillStyle = '#ef4444';
+  ctx.font = 'bold 12px IBM Plex Mono';
+  ctx.textAlign = 'left';
+  ctx.fillText(`t = ${(t*100).toFixed(1)} × 10⁻²`, 10, 20);
+}
+
+// ========== KARATE DEMO (Slide 14) ==========
+let karateMode2 = 'truth';
+// Simplified Karate Club layout
+const karateN = 34;
+const karatePos = [];
+// Generate circular-ish layout
+for (let i = 0; i < karateN; i++) {
+  const angle = (i / karateN) * Math.PI * 2 - Math.PI/2;
+  const r = 110 + (i % 3) * 25;
+  karatePos.push({
+    x: 220 + r * Math.cos(angle),
+    y: 170 + r * Math.sin(angle)
+  });
+}
+// Key nodes centered
+karatePos[0] = {x:120, y:170};  // Mr. Hi
+karatePos[33] = {x:320, y:170}; // Officer
+
+const karateEdgeList = [
+  [0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],[0,8],[0,10],[0,11],[0,12],[0,13],[0,17],[0,19],[0,21],[0,31],
+  [1,2],[1,3],[1,7],[1,13],[1,17],[1,19],[1,21],[1,30],
+  [2,3],[2,7],[2,8],[2,9],[2,13],[2,27],[2,28],[2,32],
+  [3,7],[3,12],[3,13],
+  [4,6],[4,10],
+  [5,6],[5,10],[5,16],
+  [6,16],
+  [8,30],[8,32],[8,33],
+  [9,33],
+  [13,33],
+  [14,32],[14,33],
+  [15,32],[15,33],
+  [18,32],[18,33],
+  [19,33],
+  [20,32],[20,33],
+  [22,32],[22,33],
+  [23,25],[23,27],[23,29],[23,32],[23,33],
+  [24,25],[24,27],[24,31],
+  [25,31],
+  [26,29],[26,33],
+  [27,33],
+  [28,31],[28,33],
+  [29,32],[29,33],
+  [30,32],[30,33],
+  [31,32],[31,33],
+  [32,33]
+];
+// Ground truth: 0-based
+const karateGT = {};
+[0,1,2,3,4,5,6,7,10,11,12,13,16,17,19,21].forEach(i => karateGT[i] = 0);
+[8,9,14,15,18,20,22,23,24,25,26,27,28,29,30,31,32,33].forEach(i => karateGT[i] = 1);
+
+function initKarateDemo() { drawKarate(); }
+
+function karateDemo(mode) {
+  karateMode2 = mode;
+  document.querySelectorAll('#canvas-karate ~ .demo-controls .demo-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  drawKarate();
+  const readout = document.getElementById('karate-readout');
+  if (mode === 'truth') readout.innerHTML = '<span class="val2">Ground truth</span>: Red = Mr. Hi (node 0), Blue = Officer (node 33)';
+  else if (mode === 'fiedler') readout.innerHTML = '<span class="val3">Fiedler partition</span>: ~97% accuracy. Only 1 node misclassified.';
+  else if (mode === 'louvain') readout.innerHTML = '<span class="val2">Louvain</span>: finds 4 sub-communities (Q = 0.42)';
+  else readout.innerHTML = '<span class="val">Girvan-Newman</span>: edge betweenness removal. ~94% accuracy.';
+}
+
+function drawKarate() {
+  const c = document.getElementById('canvas-karate');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+
+  const colors0 = ['#ef4444','#3b82f6'];
+  const colorsLouvain = ['#ef4444','#3b82f6','#f59e0b','#10b981'];
+
+  // Edges
+  ctx.strokeStyle = 'rgba(59,111,212,0.15)';
+  ctx.lineWidth = 0.8;
+  karateEdgeList.forEach(([i,j]) => {
+    if (i < karateN && j < karateN) {
+      ctx.beginPath();
+      ctx.moveTo(karatePos[i].x, karatePos[i].y);
+      ctx.lineTo(karatePos[j].x, karatePos[j].y);
+      ctx.stroke();
+    }
+  });
+
+  // Nodes
+  for (let i = 0; i < karateN; i++) {
+    let color;
+    if (karateMode2 === 'truth') {
+      color = colors0[karateGT[i]];
+    } else if (karateMode2 === 'fiedler') {
+      // Simulated Fiedler: almost same as truth, flip node 8
+      const fGroup = (i === 8) ? 0 : karateGT[i];
+      color = colors0[fGroup];
+    } else if (karateMode2 === 'louvain') {
+      const lGroup = i <= 7 ? 0 : i <= 13 ? 2 : i <= 24 ? 3 : 1;
+      color = colorsLouvain[lGroup % 4];
+    } else {
+      // Girvan-Newman: swap nodes 2,8
+      const gnGroup = (i === 2 || i === 8) ? (1 - karateGT[i]) : karateGT[i];
+      color = colors0[gnGroup];
+    }
+
+    const isKey = i === 0 || i === 33;
+    const size = isKey ? 14 : 8;
+
+    ctx.beginPath();
+    ctx.arc(karatePos[i].x, karatePos[i].y, size, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.8;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#0a0e17';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    if (isKey || i < 10) {
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${isKey ? 10 : 8}px IBM Plex Mono`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(i, karatePos[i].x, karatePos[i].y);
+    }
+  }
+}
+
+// ========== MODULARITY DEMO (Slide 15) ==========
+function initModularityDemo() { drawModularity('normal'); }
+
+function modularityDemo(mode) {
+  document.querySelectorAll('#canvas-modularity ~ .demo-controls .demo-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  drawModularity(mode);
+}
+
+function drawModularity(mode) {
+  const c = document.getElementById('canvas-modularity');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+
+  // Sector clusters
+  const sectors = [
+    {name:'Tech', cx:110, cy:80, color:'#3b82f6', stocks:['AAPL','MSFT','GOOG','NVDA','META']},
+    {name:'Finance', cx:330, cy:80, color:'#ef4444', stocks:['JPM','GS','BAC','C','MS']},
+    {name:'Energy', cx:110, cy:200, color:'#f59e0b', stocks:['XOM','CVX','COP','SLB','EOG']},
+    {name:'Health', cx:330, cy:200, color:'#10b981', stocks:['JNJ','PFE','UNH','MRK','ABT']},
+  ];
+
+  const spread = mode === 'normal' ? 35 : mode === 'stress' ? 50 : 70;
+  const crossAlpha = mode === 'normal' ? 0.08 : mode === 'stress' ? 0.25 : 0.6;
+  const Q = mode === 'normal' ? 0.52 : mode === 'stress' ? 0.31 : 0.08;
+
+  const allNodes = [];
+  sectors.forEach(s => {
+    s.stocks.forEach((stock, i) => {
+      const angle = (i / s.stocks.length) * Math.PI * 2;
+      allNodes.push({
+        x: s.cx + spread * Math.cos(angle),
+        y: s.cy + spread * Math.sin(angle),
+        label: stock, sector: s.name, color: s.color
+      });
+    });
+  });
+
+  // Intra-sector edges
+  for (let s = 0; s < 4; s++) {
+    for (let i = s*5; i < s*5+5; i++) {
+      for (let j = i+1; j < s*5+5; j++) {
+        ctx.beginPath();
+        ctx.moveTo(allNodes[i].x, allNodes[i].y);
+        ctx.lineTo(allNodes[j].x, allNodes[j].y);
+        ctx.strokeStyle = allNodes[i].color;
+        ctx.globalAlpha = 0.25;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Cross-sector edges
+  ctx.globalAlpha = crossAlpha;
+  ctx.strokeStyle = '#8899b0';
+  ctx.lineWidth = 0.8;
+  for (let i = 0; i < allNodes.length; i++) {
+    for (let j = i+1; j < allNodes.length; j++) {
+      if (allNodes[i].sector !== allNodes[j].sector && Math.random() < crossAlpha * 1.5) {
+        ctx.beginPath();
+        ctx.moveTo(allNodes[i].x, allNodes[i].y);
+        ctx.lineTo(allNodes[j].x, allNodes[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // Nodes
+  allNodes.forEach(n => {
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, 10, 0, Math.PI * 2);
+    ctx.fillStyle = mode === 'crisis' ? '#8b5cf6' : n.color;
+    ctx.globalAlpha = 0.8;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#0a0e17';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = '7px IBM Plex Mono';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.label.substring(0,3), n.x, n.y);
+  });
+
+  // Q display
+  ctx.fillStyle = Q > 0.3 ? '#4ecca3' : Q > 0.15 ? '#f59e0b' : '#ef4444';
+  ctx.font = 'bold 16px IBM Plex Mono';
+  ctx.textAlign = 'right';
+  ctx.fillText(`Q = ${Q.toFixed(2)}`, c.width - 15, 25);
+
+  const readout = document.getElementById('modularity-readout');
+  if (mode === 'normal') readout.innerHTML = '<span class="val">Normal market</span>: clear sector clusters, Q ≈ 0.52';
+  else if (mode === 'stress') readout.innerHTML = '<span class="val2">Mild stress</span>: cross-sector correlations rising, Q ≈ 0.31';
+  else readout.innerHTML = '<span style="color:var(--red)">Crisis</span>: "correlations go to 1" — sectors blur, Q ≈ 0.08';
+}
+
+// ========== ADJACENCY A DEMO (Slide 16) ==========
+const adjANodes = [
+  {label:'JPM',x:220,y:90,color:'#ef4444',size:18},
+  {label:'GS',x:340,y:120,color:'#ef4444',size:16},
+  {label:'Citi',x:300,y:230,color:'#ef4444',size:15},
+  {label:'AAPL',x:100,y:140,color:'#3b82f6',size:17},
+  {label:'MSFT',x:140,y:250,color:'#3b82f6',size:14},
+  {label:'XOM',x:380,y:260,color:'#f59e0b',size:13},
+  {label:'AIG',x:260,y:160,color:'#10b981',size:16},
+];
+const adjAEdges = [[0,1],[0,2],[0,6],[0,4],[1,2],[1,6],[1,5],[2,5],[2,6],[3,4],[3,0],[3,1],[4,6],[5,6]];
+let adjACur = 'walks';
+let adjAAnimFrame = 0;
+let adjAAnimId = null;
+
+function initAdjADemo() { adjADemo('walks'); }
+
+function adjADemo(mode) {
+  adjACur = mode;
+  if (adjAAnimId) cancelAnimationFrame(adjAAnimId);
+  adjAAnimFrame = 0;
+  // Toggle cards
+  ['walks','centrality','communicability','structure'].forEach(m => {
+    const el = document.getElementById('adjA-card-' + m);
+    if (el) el.style.display = m === mode ? 'block' : 'none';
+  });
+  document.querySelectorAll('#canvas-adjA ~ .demo-controls .demo-btn').forEach(b => b.classList.remove('active'));
+  if (event && event.target) event.target.classList.add('active');
+  drawAdjA();
+}
+
+function drawAdjA() {
+  const c = document.getElementById('canvas-adjA');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  adjAAnimFrame++;
+
+  if (adjACur === 'walks') {
+    // Animate walk paths lighting up in sequence
+    const pathColors = ['#ef4444','#f59e0b','#4ecca3','#c084fc'];
+    // Show A, A², A³ paths from node 3 (AAPL) to node 5 (XOM)
+    const paths = [
+      {label:'A¹ (direct)', nodes:[3,0], steps:1},
+      {label:'A² (2-step)', nodes:[3,0,1], steps:2},
+      {label:'A² (2-step)', nodes:[3,1,5], steps:2},
+      {label:'A³ (3-step)', nodes:[3,0,6,5], steps:3},
+    ];
+    // Draw base edges faintly
+    ctx.strokeStyle = 'rgba(59,111,212,0.12)';
+    ctx.lineWidth = 1;
+    adjAEdges.forEach(([i,j]) => {
+      ctx.beginPath(); ctx.moveTo(adjANodes[i].x,adjANodes[i].y);
+      ctx.lineTo(adjANodes[j].x,adjANodes[j].y); ctx.stroke();
+    });
+    // Animate paths
+    const activeIdx = Math.floor((adjAAnimFrame / 60) % paths.length);
+    paths.forEach((p, pi) => {
+      const alpha = pi === activeIdx ? 1 : 0.15;
+      ctx.strokeStyle = pathColors[pi % 4];
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = pi === activeIdx ? 4 : 2;
+      ctx.setLineDash(pi === activeIdx ? [] : [4,4]);
+      for (let k = 0; k < p.nodes.length - 1; k++) {
+        const a = adjANodes[p.nodes[k]], b = adjANodes[p.nodes[k+1]];
+        ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+        // Arrow
+        const angle = Math.atan2(b.y-a.y, b.x-a.x);
+        const mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
+        ctx.beginPath();
+        ctx.moveTo(mx+8*Math.cos(angle), my+8*Math.sin(angle));
+        ctx.lineTo(mx-6*Math.cos(angle-0.5), my-6*Math.sin(angle-0.5));
+        ctx.lineTo(mx-6*Math.cos(angle+0.5), my-6*Math.sin(angle+0.5));
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.setLineDash([]);
+      // Label
+      if (pi === activeIdx) {
+        ctx.fillStyle = pathColors[pi % 4];
+        ctx.font = 'bold 12px IBM Plex Mono';
+        ctx.textAlign = 'left';
+        ctx.fillText(p.label + ' (' + p.steps + ' step' + (p.steps>1?'s':'') + ')', 10, 340 - pi * 0);
+      }
+    });
+    ctx.globalAlpha = 1;
+    // Draw nodes
+    adjANodes.forEach((n,i) => {
+      ctx.beginPath(); ctx.arc(n.x,n.y,n.size,0,Math.PI*2);
+      const onPath = paths[activeIdx].nodes.includes(i);
+      ctx.fillStyle = onPath ? '#fff' : n.color;
+      ctx.globalAlpha = onPath ? 1 : 0.5;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = onPath ? '#0a0e17' : '#fff';
+      ctx.font = 'bold 10px IBM Plex Mono'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.x, n.y);
+    });
+    const rr = document.getElementById('adjA-readout');
+    if (rr) rr.innerHTML = `<span class="val2">Path ${activeIdx+1}/4</span>: <span class="val">${paths[activeIdx].label}</span> from AAPL. Auto-cycling every 2s. A<sup>k</sup>[i][j] = number of length-k walks.`;
+  }
+  else if (adjACur === 'centrality') {
+    // Nodes sized by simulated eigenvector centrality
+    const eigVals = [0.38, 0.36, 0.27, 0.35, 0.21, 0.18, 0.33];
+    ctx.strokeStyle = 'rgba(192,132,252,0.15)'; ctx.lineWidth = 1;
+    adjAEdges.forEach(([i,j]) => {
+      ctx.beginPath(); ctx.moveTo(adjANodes[i].x,adjANodes[i].y);
+      ctx.lineTo(adjANodes[j].x,adjANodes[j].y); ctx.stroke();
+    });
+    // Recursive arrows: highlight that JPM is big because GS and AIG are big
+    const pulse = 0.5 + 0.5 * Math.sin(adjAAnimFrame * 0.05);
+    [[6,0],[1,0],[0,3]].forEach(([from,to]) => {
+      const a = adjANodes[from], b = adjANodes[to];
+      ctx.strokeStyle = `rgba(192,132,252,${0.3 + pulse * 0.4})`;
+      ctx.lineWidth = 2 + pulse * 2;
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    });
+    adjANodes.forEach((n,i) => {
+      const v = eigVals[i];
+      const sz = 10 + v * 40;
+      // Glow for high centrality
+      if (v > 0.3) {
+        ctx.beginPath(); ctx.arc(n.x,n.y,sz+6,0,Math.PI*2);
+        ctx.fillStyle = `rgba(192,132,252,${0.1 + pulse*0.15})`; ctx.fill();
+      }
+      ctx.beginPath(); ctx.arc(n.x,n.y,sz,0,Math.PI*2);
+      ctx.fillStyle = n.color; ctx.globalAlpha = 0.8; ctx.fill();
+      ctx.globalAlpha = 1; ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 10px IBM Plex Mono';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.x, n.y - 5);
+      ctx.font = '9px IBM Plex Mono'; ctx.fillStyle = '#c084fc';
+      ctx.fillText(v.toFixed(2), n.x, n.y + 8);
+    });
+    const rr = document.getElementById('adjA-readout');
+    if (rr) rr.innerHTML = `<span class="val">Size ∝ eigenvector centrality</span>. JPM is large because GS and AIG (themselves large) are its neighbors. <em>Recursive</em> importance.`;
+  }
+  else if (adjACur === 'communicability') {
+    // Show exp(A) — all paths between two nodes with decay
+    const commPairs = [[3,5,0.82,'AAPL→XOM'],[0,5,1.45,'JPM→XOM'],[3,2,0.67,'AAPL→Citi'],[0,6,1.91,'JPM→AIG']];
+    ctx.strokeStyle = 'rgba(78,204,163,0.1)'; ctx.lineWidth = 1;
+    adjAEdges.forEach(([i,j]) => {
+      ctx.beginPath(); ctx.moveTo(adjANodes[i].x,adjANodes[i].y);
+      ctx.lineTo(adjANodes[j].x,adjANodes[j].y); ctx.stroke();
+    });
+    // Draw communicability "heat" between pairs
+    const phase = (adjAAnimFrame * 0.03) % (Math.PI * 2);
+    commPairs.forEach((cp, idx) => {
+      const [i,j,val,label] = cp;
+      const a = adjANodes[i], b = adjANodes[j];
+      const intensity = 0.3 + 0.7 * (val / 2);
+      const wave = 0.6 + 0.4 * Math.sin(phase + idx);
+      ctx.strokeStyle = `rgba(78,204,163,${intensity * wave})`;
+      ctx.lineWidth = 1 + val * 3 * wave;
+      ctx.setLineDash([6,3]);
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+      ctx.setLineDash([]);
+      const mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
+      ctx.fillStyle = '#4ecca3'; ctx.font = '10px IBM Plex Mono'; ctx.textAlign = 'center';
+      ctx.globalAlpha = wave;
+      ctx.fillText(val.toFixed(2), mx, my - 8);
+      ctx.globalAlpha = 1;
+    });
+    adjANodes.forEach(n => {
+      ctx.beginPath(); ctx.arc(n.x,n.y,n.size,0,Math.PI*2);
+      ctx.fillStyle = n.color; ctx.globalAlpha = 0.7; ctx.fill();
+      ctx.globalAlpha = 1; ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 10px IBM Plex Mono';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(n.label, n.x, n.y);
+    });
+    const rr = document.getElementById('adjA-readout');
+    if (rr) rr.innerHTML = `<span class="val3">Dashed lines = exp(A) communicability</span>. Thicker = more total walk capacity. JPM→AIG = 1.91 despite moderate direct link — massive indirect channels.`;
+  }
+  else { // structure
+    // Clean adjacency view with degree labels
+    const degs = adjANodes.map((_,i) => adjAEdges.filter(([a,b]) => a===i||b===i).length);
+    ctx.strokeStyle = 'rgba(59,111,212,0.25)'; ctx.lineWidth = 1.5;
+    adjAEdges.forEach(([i,j]) => {
+      ctx.beginPath(); ctx.moveTo(adjANodes[i].x,adjANodes[i].y);
+      ctx.lineTo(adjANodes[j].x,adjANodes[j].y); ctx.stroke();
+    });
+    adjANodes.forEach((n,i) => {
+      const sz = n.size + degs[i] * 1.5;
+      ctx.beginPath(); ctx.arc(n.x,n.y,sz,0,Math.PI*2);
+      ctx.fillStyle = n.color; ctx.globalAlpha = 0.8; ctx.fill();
+      ctx.globalAlpha = 1; ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 10px IBM Plex Mono';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.x, n.y - 5);
+      ctx.font = '9px IBM Plex Mono'; ctx.fillStyle = '#8899b0';
+      ctx.fillText('deg=' + degs[i], n.x, n.y + 9);
+    });
+    // Density
+    const density = (2 * adjAEdges.length) / (adjANodes.length * (adjANodes.length - 1));
+    ctx.fillStyle = '#3b6fd4'; ctx.font = 'bold 12px IBM Plex Mono'; ctx.textAlign = 'left';
+    ctx.fillText(`ρ = ${density.toFixed(2)} (density)`, 10, 20);
+    ctx.fillText(`|V| = ${adjANodes.length}, |E| = ${adjAEdges.length}`, 10, 36);
+    const rr = document.getElementById('adjA-readout');
+    if (rr) rr.innerHTML = `<span class="val">Raw adjacency structure</span>. Size ∝ degree. ρ = ${density.toFixed(2)} — ${Math.round(density*100)}% of all possible edges exist.`;
+  }
+
+  if (adjACur === 'walks' || adjACur === 'centrality' || adjACur === 'communicability') {
+    adjAAnimId = requestAnimationFrame(drawAdjA);
+  }
+}
+
+// ========== LAPLACIAN L DEMO (Slide 17) ==========
+const lapNodes = [
+  {label:'US',x:200,y:100,v2:0.08},{label:'UK',x:300,y:70,v2:0.22},
+  {label:'DE',x:370,y:130,v2:0.42},{label:'FR',x:340,y:210,v2:0.38},
+  {label:'JP',x:120,y:190,v2:-0.12},{label:'CN',x:60,y:120,v2:-0.48},
+  {label:'KR',x:80,y:250,v2:-0.41},{label:'BR',x:160,y:50,v2:-0.37},
+  {label:'IT',x:400,y:270,v2:0.31},{label:'ES',x:260,y:280,v2:0.28}
+];
+const lapEdges = [[0,1],[0,4],[0,2],[0,5],[0,6],[1,2],[1,3],[1,4],[1,8],[1,9],[2,3],[2,8],[2,9],[2,4],[3,8],[3,9],[3,4],[4,5],[4,6],[5,6],[5,7],[8,9],[0,7]];
+let lapCur = 'lambda2';
+let lapAnimFrame = 0;
+let lapAnimId = null;
+
+function initLapLDemo() { lapLDemo('lambda2'); }
+
+function lapLDemo(mode) {
+  lapCur = mode;
+  if (lapAnimId) cancelAnimationFrame(lapAnimId);
+  lapAnimFrame = 0;
+  ['lambda2','partition','diffusion','flow'].forEach(m => {
+    const el = document.getElementById('lapL-card-' + m);
+    if (el) el.style.display = m === mode ? 'block' : 'none';
+  });
+  document.querySelectorAll('#canvas-lapL ~ .demo-controls .demo-btn').forEach(b => b.classList.remove('active'));
+  if (event && event.target) event.target.classList.add('active');
+  drawLapL();
+}
+
+function drawLapL() {
+  const c = document.getElementById('canvas-lapL');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  lapAnimFrame++;
+
+  if (lapCur === 'lambda2') {
+    // Show network with edges being "cut" — count cuts needed
+    const pulse = 0.5 + 0.5 * Math.sin(lapAnimFrame * 0.04);
+    // Highlight the weakest cross-group edges (the "min cut")
+    const crossEdges = [[0,5],[0,6],[1,4],[2,4],[3,4],[0,4],[5,7]];
+    const isCross = (i,j) => crossEdges.some(([a,b]) => (a===i&&b===j)||(a===j&&b===i));
+
+    lapEdges.forEach(([i,j]) => {
+      const cross = isCross(i,j);
+      ctx.strokeStyle = cross ? `rgba(239,68,68,${0.3+pulse*0.5})` : 'rgba(78,204,163,0.2)';
+      ctx.lineWidth = cross ? 2+pulse*2 : 1;
+      ctx.setLineDash(cross ? [4,3] : []);
+      ctx.beginPath(); ctx.moveTo(lapNodes[i].x,lapNodes[i].y);
+      ctx.lineTo(lapNodes[j].x,lapNodes[j].y); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+    lapNodes.forEach(n => {
+      ctx.beginPath(); ctx.arc(n.x,n.y,14,0,Math.PI*2);
+      ctx.fillStyle = n.v2 >= 0 ? '#3b82f6' : '#ef4444';
+      ctx.globalAlpha = 0.8; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 10px IBM Plex Mono';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.x, n.y);
+    });
+    // λ₂ bar
+    ctx.fillStyle = '#4ecca3'; ctx.font = 'bold 14px IBM Plex Mono'; ctx.textAlign = 'left';
+    ctx.fillText('λ₂ = 142', 10, 20);
+    ctx.font = '11px IBM Plex Mono'; ctx.fillStyle = '#8899b0';
+    ctx.fillText('Red dashed = edges in the min-cut', 10, 38);
+    ctx.fillText('More cuts needed → higher λ₂ → more robust', 10, 54);
+    const rr = document.getElementById('lapL-readout');
+    if (rr) rr.innerHTML = `<span class="val3">λ₂ = 142</span>. Red dashed edges = the "fault line." Cutting these splits the network. <em>Higher λ₂ = more cables to cut.</em>`;
+    lapAnimId = requestAnimationFrame(drawLapL);
+  }
+  else if (lapCur === 'partition') {
+    // Fiedler vector visualization — nodes slide to their v₂ position
+    const t = Math.min(1, lapAnimFrame / 60);
+    const ease = t < 0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+
+    lapEdges.forEach(([i,j]) => {
+      const cross = (lapNodes[i].v2 >= 0) !== (lapNodes[j].v2 >= 0);
+      ctx.strokeStyle = cross ? 'rgba(239,68,68,0.3)' : 'rgba(78,204,163,0.2)';
+      ctx.lineWidth = cross ? 1.5 : 1;
+      const ni = lapNodes[i], nj = lapNodes[j];
+      const x1 = ni.x * (1-ease) + (220 + ni.v2 * 400) * ease;
+      const y1 = ni.y;
+      const x2 = nj.x * (1-ease) + (220 + nj.v2 * 400) * ease;
+      const y2 = nj.y;
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    });
+    // Vertical divider
+    if (ease > 0.3) {
+      ctx.strokeStyle = `rgba(192,132,252,${ease * 0.5})`;
+      ctx.lineWidth = 2; ctx.setLineDash([6,4]);
+      ctx.beginPath(); ctx.moveTo(220,10); ctx.lineTo(220,350); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#c084fc'; ctx.font = '11px IBM Plex Mono'; ctx.textAlign = 'center';
+      ctx.fillText('v₂ = 0 (partition boundary)', 220, 350);
+    }
+    lapNodes.forEach(n => {
+      const x = n.x * (1-ease) + (220 + n.v2 * 400) * ease;
+      const sz = 12 + Math.abs(n.v2) * 14;
+      ctx.beginPath(); ctx.arc(x,n.y,sz,0,Math.PI*2);
+      ctx.fillStyle = n.v2 >= 0 ? '#3b82f6' : '#ef4444';
+      ctx.globalAlpha = 0.8; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 10px IBM Plex Mono';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, x, n.y - 4);
+      ctx.font = '8px IBM Plex Mono'; ctx.fillStyle = '#ccc';
+      ctx.fillText((n.v2>=0?'+':'') + n.v2.toFixed(2), x, n.y + 8);
+    });
+    const rr = document.getElementById('lapL-readout');
+    if (rr) rr.innerHTML = `Nodes <span class="val3">slide to their v₂ position</span>. Sign determines group. Magnitude = strength of membership. US near zero = bridge.`;
+    if (t < 1) lapAnimId = requestAnimationFrame(drawLapL);
+  }
+  else if (lapCur === 'diffusion') {
+    // Shock diffusion animation — shock starts at CN, spreads
+    const t = (lapAnimFrame % 200) / 200;
+    let shock = lapNodes.map(() => 0);
+    shock[5] = 1; // CN
+    const steps = Math.floor(t * 80);
+    for (let s = 0; s < steps; s++) {
+      const ns = [...shock];
+      lapNodes.forEach((_,i) => {
+        const nbrs = lapEdges.filter(([a,b]) => a===i||b===i).map(([a,b]) => a===i?b:a);
+        if (nbrs.length > 0) {
+          const avg = nbrs.reduce((s,j) => s + shock[j], 0) / nbrs.length;
+          ns[i] = shock[i] * 0.85 + avg * 0.15;
+        }
+      });
+      shock = ns;
+    }
+    const maxS = Math.max(...shock, 0.001);
+
+    lapEdges.forEach(([i,j]) => {
+      ctx.strokeStyle = 'rgba(239,68,68,0.12)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(lapNodes[i].x,lapNodes[i].y);
+      ctx.lineTo(lapNodes[j].x,lapNodes[j].y); ctx.stroke();
+    });
+    lapNodes.forEach((n,i) => {
+      const intensity = shock[i] / maxS;
+      const sz = 12 + intensity * 12;
+      if (intensity > 0.15) {
+        ctx.beginPath(); ctx.arc(n.x,n.y,sz+8,0,Math.PI*2);
+        ctx.fillStyle = `rgba(239,68,68,${intensity*0.3})`; ctx.fill();
+      }
+      ctx.beginPath(); ctx.arc(n.x,n.y,sz,0,Math.PI*2);
+      const r = Math.floor(30 + intensity * 209);
+      const g = Math.floor(30 + (1-intensity) * 90);
+      const b = Math.floor(50 + (1-intensity) * 150);
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fill(); ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 10px IBM Plex Mono';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.x, n.y);
+    });
+    ctx.fillStyle = '#ef4444'; ctx.font = 'bold 12px IBM Plex Mono'; ctx.textAlign = 'left';
+    ctx.fillText(`Shock at CN, t = ${t.toFixed(2)}`, 10, 20);
+    const rr = document.getElementById('lapL-readout');
+    if (rr) rr.innerHTML = `<span style="color:var(--red)">Shock at China</span> diffusing via exp(−tL). Watch it cross the fault line to Europe. λ₂ governs the crossing speed.`;
+    lapAnimId = requestAnimationFrame(drawLapL);
+  }
+  else { // flow
+    // Quadratic form visualization — assign "temperatures" and show x^T L x
+    const temps = [0.3, 0.5, 0.6, 0.55, -0.1, -0.4, -0.35, -0.2, 0.7, 0.65];
+    let stress = 0;
+    lapEdges.forEach(([i,j]) => {
+      const diff = Math.abs(temps[i] - temps[j]);
+      stress += diff * diff;
+      const r = Math.floor(diff * 400);
+      ctx.strokeStyle = `rgba(${Math.min(255,100+r)},${Math.max(0,150-r)},50,${0.3+diff*0.5})`;
+      ctx.lineWidth = 1 + diff * 4;
+      ctx.beginPath(); ctx.moveTo(lapNodes[i].x,lapNodes[i].y);
+      ctx.lineTo(lapNodes[j].x,lapNodes[j].y); ctx.stroke();
+    });
+    lapNodes.forEach((n,i) => {
+      const t = temps[i];
+      const r = t > 0 ? Math.floor(100 + t * 300) : 50;
+      const b = t < 0 ? Math.floor(100 + Math.abs(t) * 300) : 50;
+      ctx.beginPath(); ctx.arc(n.x,n.y,16,0,Math.PI*2);
+      ctx.fillStyle = `rgb(${r},50,${b})`; ctx.fill();
+      ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 10px IBM Plex Mono';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.x, n.y - 4);
+      ctx.font = '8px IBM Plex Mono';
+      ctx.fillText((t>=0?'+':'') + t.toFixed(1), n.x, n.y + 8);
+    });
+    ctx.fillStyle = '#c084fc'; ctx.font = 'bold 12px IBM Plex Mono'; ctx.textAlign = 'left';
+    ctx.fillText(`x^T L x = ${stress.toFixed(2)} (total stress)`, 10, 20);
+    ctx.font = '11px IBM Plex Mono'; ctx.fillStyle = '#8899b0';
+    ctx.fillText('Thick edges = high (xi − xj)² = stress', 10, 38);
+    ctx.fillText('Red nodes = hot, Blue nodes = cold', 10, 54);
+    const rr = document.getElementById('lapL-readout');
+    if (rr) rr.innerHTML = `<span class="val">x<sup>T</sup>Lx = ${stress.toFixed(2)}</span>. Edge thickness ∝ temperature difference. The Laplacian penalizes "rough" signals on the network.`;
+  }
+}
+
+// ========== TRANSITION P DEMO (Slide 18) ==========
+const transPNodes = [
+  {label:'JPM',x:220,y:90,deg:5,pi:0.19},
+  {label:'GS',x:340,y:110,deg:4,pi:0.15},
+  {label:'Citi',x:300,y:230,deg:4,pi:0.15},
+  {label:'AIG',x:180,y:180,deg:5,pi:0.19},
+  {label:'MS',x:100,y:130,deg:3,pi:0.11},
+  {label:'HSBC',x:380,y:200,deg:3,pi:0.11},
+  {label:'Lehman',x:140,y:280,deg:2,pi:0.08},
+];
+const transPEdges = [[0,1],[0,2],[0,3],[0,4],[1,2],[1,5],[2,3],[2,5],[3,4],[3,6],[4,6],[1,3]];
+let transCur = 'stationary';
+let transAnimFrame = 0;
+let transAnimId = null;
+
+function initTransPDemo() { transPDemo('stationary'); }
+
+function transPDemo(mode) {
+  transCur = mode;
+  if (transAnimId) cancelAnimationFrame(transAnimId);
+  transAnimFrame = 0;
+  ['stationary','mfpt','gap','dynamics'].forEach(m => {
+    const el = document.getElementById('transP-card-' + m);
+    if (el) el.style.display = m === mode ? 'block' : 'none';
+  });
+  document.querySelectorAll('#canvas-transP ~ .demo-controls .demo-btn').forEach(b => b.classList.remove('active'));
+  if (event && event.target) event.target.classList.add('active');
+  drawTransP();
+}
+
+function drawTransP() {
+  const c = document.getElementById('canvas-transP');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  transAnimFrame++;
+
+  if (transCur === 'stationary') {
+    // Nodes pulsing proportional to π
+    const pulse = 0.5 + 0.5 * Math.sin(transAnimFrame * 0.03);
+    ctx.strokeStyle = 'rgba(224,123,57,0.15)'; ctx.lineWidth = 1;
+    transPEdges.forEach(([i,j]) => {
+      ctx.beginPath(); ctx.moveTo(transPNodes[i].x,transPNodes[i].y);
+      ctx.lineTo(transPNodes[j].x,transPNodes[j].y); ctx.stroke();
+    });
+    // "Random walker" dot
+    const walkerEdge = transPEdges[Math.floor((transAnimFrame / 30) % transPEdges.length)];
+    const wt = (transAnimFrame % 30) / 30;
+    const wa = transPNodes[walkerEdge[0]], wb = transPNodes[walkerEdge[1]];
+    const wx = wa.x + (wb.x - wa.x) * wt;
+    const wy = wa.y + (wb.y - wa.y) * wt;
+    ctx.beginPath(); ctx.arc(wx,wy,5,0,Math.PI*2);
+    ctx.fillStyle = '#f59e0b'; ctx.fill();
+
+    transPNodes.forEach(n => {
+      const sz = 10 + n.pi * 80 * (0.8 + pulse * 0.2);
+      ctx.beginPath(); ctx.arc(n.x,n.y,sz,0,Math.PI*2);
+      ctx.fillStyle = `rgba(224,123,57,${0.3 + n.pi})`;
+      ctx.fill();
+      ctx.beginPath(); ctx.arc(n.x,n.y,12,0,Math.PI*2);
+      ctx.fillStyle = '#e07b39'; ctx.fill();
+      ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px IBM Plex Mono';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.x, n.y - 3);
+      ctx.font = '8px IBM Plex Mono'; ctx.fillStyle = '#ffd';
+      ctx.fillText('π=' + n.pi.toFixed(2), n.x, n.y + 8);
+    });
+    const rr = document.getElementById('transP-readout');
+    if (rr) rr.innerHTML = `<span class="val2">Circle size ∝ π</span>. Yellow dot = random walker. JPM & AIG have highest π — they are the system's <em>risk sinks</em>.`;
+    transAnimId = requestAnimationFrame(drawTransP);
+  }
+  else if (transCur === 'mfpt') {
+    // Show arrows from Lehman to each bank with "distance" labels
+    const mfpts = {0:3.2, 1:4.1, 2:3.8, 3:2.1, 4:2.5, 5:5.3};
+    ctx.strokeStyle = 'rgba(239,68,68,0.12)'; ctx.lineWidth = 1;
+    transPEdges.forEach(([i,j]) => {
+      ctx.beginPath(); ctx.moveTo(transPNodes[i].x,transPNodes[i].y);
+      ctx.lineTo(transPNodes[j].x,transPNodes[j].y); ctx.stroke();
+    });
+    const lehman = transPNodes[6];
+    // Animated "ripple" from Lehman
+    const rippleR = (transAnimFrame * 1.5) % 250;
+    ctx.beginPath(); ctx.arc(lehman.x,lehman.y,rippleR,0,Math.PI*2);
+    ctx.strokeStyle = `rgba(239,68,68,${Math.max(0, 0.4 - rippleR/300)})`;
+    ctx.lineWidth = 2; ctx.stroke();
+
+    Object.entries(mfpts).forEach(([idx,mfpt]) => {
+      const n = transPNodes[parseInt(idx)];
+      const reached = rippleR > Math.sqrt((n.x-lehman.x)**2 + (n.y-lehman.y)**2);
+      // Arrow from Lehman
+      ctx.strokeStyle = reached ? '#ef4444' : 'rgba(239,68,68,0.2)';
+      ctx.lineWidth = reached ? 2 : 1;
+      ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(lehman.x,lehman.y); ctx.lineTo(n.x,n.y); ctx.stroke();
+      ctx.setLineDash([]);
+      // MFPT label
+      const mx = (lehman.x+n.x)/2, my = (lehman.y+n.y)/2;
+      ctx.fillStyle = reached ? '#ef4444' : '#555';
+      ctx.font = 'bold 10px IBM Plex Mono'; ctx.textAlign = 'center';
+      ctx.fillText(mfpt.toFixed(1) + ' steps', mx, my - 6);
+    });
+
+    transPNodes.forEach((n,i) => {
+      ctx.beginPath(); ctx.arc(n.x,n.y,i===6?16:12,0,Math.PI*2);
+      ctx.fillStyle = i === 6 ? '#ef4444' : '#3b6fd4';
+      ctx.globalAlpha = 0.8; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px IBM Plex Mono';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.x, n.y);
+    });
+    const rr = document.getElementById('transP-readout');
+    if (rr) rr.innerHTML = `<span style="color:var(--red)">Ripple from Lehman</span>. MFPT labels = expected steps to reach each bank. AIG = 2.1 steps (dangerously close). HSBC = 5.3 (more insulated).`;
+    transAnimId = requestAnimationFrame(drawTransP);
+  }
+  else if (transCur === 'gap') {
+    // Two scenarios: small gap (two clusters) vs large gap (well-mixed)
+    const phase = Math.floor(transAnimFrame / 120) % 2;
+    const t = (transAnimFrame % 120) / 120;
+
+    if (phase === 0) {
+      // Small gap — two clusters barely connected
+      ctx.fillStyle = '#4ecca3'; ctx.font = 'bold 12px IBM Plex Mono'; ctx.textAlign = 'left';
+      ctx.fillText('Small spectral gap: bottleneck', 10, 20);
+      ctx.font = '11px IBM Plex Mono'; ctx.fillStyle = '#8899b0';
+      ctx.fillText('Shock stays trapped in one cluster', 10, 38);
+      // Two clusters
+      for (let i = 0; i < 5; i++) {
+        const angle = (i/5) * Math.PI * 2;
+        const x1 = 130 + 60 * Math.cos(angle), y1 = 200 + 60 * Math.sin(angle);
+        const x2 = 310 + 60 * Math.cos(angle), y2 = 200 + 60 * Math.sin(angle);
+        ctx.beginPath(); ctx.arc(x1,y1,10,0,Math.PI*2);
+        ctx.fillStyle = `rgba(239,68,68,${i===0 ? 0.3+t*0.7 : 0.1+t*0.3})`; ctx.fill();
+        ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.beginPath(); ctx.arc(x2,y2,10,0,Math.PI*2);
+        ctx.fillStyle = `rgba(59,111,212,${0.1+t*0.05})`; ctx.fill();
+        ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1; ctx.stroke();
+      }
+      // Sparse connection between clusters
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1;
+      ctx.setLineDash([3,6]);
+      ctx.beginPath(); ctx.moveTo(190,200); ctx.lineTo(250,200); ctx.stroke();
+      ctx.setLineDash([]);
+      // Intra-cluster edges
+      ctx.strokeStyle = 'rgba(239,68,68,0.2)'; ctx.lineWidth = 1;
+      for (let i = 0; i < 5; i++) for (let j = i+1; j < 5; j++) {
+        const a1 = (i/5)*Math.PI*2, a2 = (j/5)*Math.PI*2;
+        ctx.beginPath();
+        ctx.moveTo(130+60*Math.cos(a1),200+60*Math.sin(a1));
+        ctx.lineTo(130+60*Math.cos(a2),200+60*Math.sin(a2)); ctx.stroke();
+      }
+      ctx.strokeStyle = 'rgba(59,111,212,0.2)';
+      for (let i = 0; i < 5; i++) for (let j = i+1; j < 5; j++) {
+        const a1 = (i/5)*Math.PI*2, a2 = (j/5)*Math.PI*2;
+        ctx.beginPath();
+        ctx.moveTo(310+60*Math.cos(a1),200+60*Math.sin(a1));
+        ctx.lineTo(310+60*Math.cos(a2),200+60*Math.sin(a2)); ctx.stroke();
+      }
+      ctx.fillStyle = '#ef4444'; ctx.font = '10px IBM Plex Mono'; ctx.textAlign = 'center';
+      ctx.fillText('Cluster A (infected)', 130, 290);
+      ctx.fillStyle = '#3b82f6';
+      ctx.fillText('Cluster B (safe...for now)', 310, 290);
+    } else {
+      // Large gap — well mixed
+      ctx.fillStyle = '#4ecca3'; ctx.font = 'bold 12px IBM Plex Mono'; ctx.textAlign = 'left';
+      ctx.fillText('Large spectral gap: well-mixed', 10, 20);
+      ctx.font = '11px IBM Plex Mono'; ctx.fillStyle = '#8899b0';
+      ctx.fillText('Shock reaches everyone quickly', 10, 38);
+      for (let i = 0; i < 10; i++) {
+        const angle = (i/10) * Math.PI * 2;
+        const x = 220 + 100 * Math.cos(angle), y = 200 + 100 * Math.sin(angle);
+        const intensity = 0.2 + t * 0.6;
+        ctx.beginPath(); ctx.arc(x,y,10,0,Math.PI*2);
+        ctx.fillStyle = `rgba(239,68,68,${intensity})`; ctx.fill();
+        ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1; ctx.stroke();
+        // Edges to several neighbors
+        for (let d = 1; d <= 3; d++) {
+          const j = (i+d) % 10;
+          const a2 = (j/10)*Math.PI*2;
+          ctx.strokeStyle = 'rgba(239,68,68,0.15)'; ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x,y);
+          ctx.lineTo(220+100*Math.cos(a2),200+100*Math.sin(a2));
+          ctx.stroke();
+        }
+      }
+      ctx.fillStyle = '#ef4444'; ctx.font = '10px IBM Plex Mono'; ctx.textAlign = 'center';
+      ctx.fillText('Everyone infected simultaneously', 220, 330);
+    }
+    const rr = document.getElementById('transP-readout');
+    if (rr) rr.innerHTML = phase === 0
+      ? `<span class="val3">Small gap</span> = bottleneck between clusters. Shock trapped in one side. <em>Like cream staying separate in coffee.</em>`
+      : `<span class="val3">Large gap</span> = well-connected. Shock reaches everyone fast. <em>Like cream instantly blending.</em>`;
+    transAnimId = requestAnimationFrame(drawTransP);
+  }
+  else { // dynamics
+    // Step-by-step Markov chain: u(t) = P^t u(0)
+    const step = Math.floor(transAnimFrame / 40) % 8;
+    let shock = transPNodes.map(() => 0);
+    shock[6] = 1; // Start at Lehman
+    for (let s = 0; s < step; s++) {
+      const ns = transPNodes.map(() => 0);
+      transPNodes.forEach((_,i) => {
+        const nbrs = transPEdges.filter(([a,b]) => a===i||b===i).map(([a,b]) => a===i?b:a);
+        nbrs.forEach(j => { ns[j] += shock[i] / nbrs.length; });
+      });
+      shock = ns;
+    }
+    const maxS = Math.max(...shock, 0.001);
+
+    transPEdges.forEach(([i,j]) => {
+      ctx.strokeStyle = 'rgba(192,132,252,0.12)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(transPNodes[i].x,transPNodes[i].y);
+      ctx.lineTo(transPNodes[j].x,transPNodes[j].y); ctx.stroke();
+    });
+    transPNodes.forEach((n,i) => {
+      const intensity = shock[i] / maxS;
+      const sz = 10 + intensity * 14;
+      if (intensity > 0.1) {
+        ctx.beginPath(); ctx.arc(n.x,n.y,sz+6,0,Math.PI*2);
+        ctx.fillStyle = `rgba(192,132,252,${intensity*0.3})`; ctx.fill();
+      }
+      ctx.beginPath(); ctx.arc(n.x,n.y,Math.max(10,sz),0,Math.PI*2);
+      const r = Math.floor(50 + intensity * 142);
+      const g = Math.floor(50 + (1-intensity) * 82);
+      const b = Math.floor(100 + intensity * 152);
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      ctx.fill(); ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px IBM Plex Mono';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.x, n.y - 3);
+      ctx.font = '8px IBM Plex Mono'; ctx.fillStyle = '#ddd';
+      ctx.fillText(shock[i].toFixed(2), n.x, n.y + 8);
+    });
+    ctx.fillStyle = '#c084fc'; ctx.font = 'bold 14px IBM Plex Mono'; ctx.textAlign = 'left';
+    ctx.fillText(`u(${step}) = P${step > 0 ? '^'+step : ''} · u(0)`, 10, 20);
+    ctx.font = '11px IBM Plex Mono'; ctx.fillStyle = '#8899b0';
+    ctx.fillText(`Step ${step}: multiply by P again`, 10, 38);
+    const rr = document.getElementById('transP-readout');
+    if (rr) rr.innerHTML = `<span class="val">Step ${step}</span>: u(${step}) = P<sup>${step}</sup>·u(0). Watch risk redistribute each step. Eventually → stationary π regardless of start.`;
+    transAnimId = requestAnimationFrame(drawTransP);
+  }
+}
+
+// ========== INIT ==========
+goTo(0);
+</script>
+</body>
+</html>
