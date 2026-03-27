@@ -1332,30 +1332,122 @@
   </div>
 </div>
 
-<!-- ====== SLIDE 18: TRANSITION P — 4 CONCEPTS ====== -->
+<!-- ====== SLIDE 18: TRANSITION MATRIX DEFINITION ====== -->
 <div class="slide" data-index="18">
-  <div class="slide-num">18 / Synthesis — Transition</div>
-  <span class="section-tag orange">Matrix P</span>
-  <h2>Transition Matrix: Where Things <span>Go</span></h2>
-  <p style="color:var(--text-dim);font-size:14px;margin-bottom:16px;">P = D<sup>−1</sup>A normalizes each row of A to sum to 1 — turning exposures into <strong>probabilities</strong>. If a shock is at bank i, P<sub>ij</sub> = the probability it jumps to bank j next. This is a <strong>Markov chain</strong> on the network.</p>
+  <div class="slide-num">18 / Synthesis — Transition Matrix</div>
+  <span class="section-tag orange">Definition</span>
+  <h2>What is the <span>Transition Matrix?</span></h2>
+  <p style="color:var(--text-dim);font-size:14px;margin-bottom:16px;">The transition matrix converts the adjacency matrix (raw connections) into a <strong>probability machine</strong>. It answers: "If a shock is at bank i right now, where does it go next?"</p>
   <div class="two-col">
     <div>
-      <canvas id="canvas-transP" class="demo-canvas" width="440" height="360"></canvas>
+      <canvas id="canvas-transDefn" class="demo-canvas" width="440" height="360"></canvas>
       <div class="demo-controls">
-        <button class="demo-btn orange active" onclick="transPDemo('stationary')">π Stationary</button>
-        <button class="demo-btn red" onclick="transPDemo('mfpt')">MFPT Contagion</button>
-        <button class="demo-btn teal" onclick="transPDemo('gap')">Spectral Gap</button>
-        <button class="demo-btn" onclick="transPDemo('dynamics')">Dynamics</button>
+        <button class="demo-btn active" onclick="transDefnDemo('definition')">P = D⁻¹A</button>
+        <button class="demo-btn orange" onclick="transDefnDemo('normalize')">Row Normalization</button>
+        <button class="demo-btn teal" onclick="transDefnDemo('stationary')">Stationary πP=π</button>
+        <button class="demo-btn" onclick="transDefnDemo('symmetric')">Symmetric vs RW</button>
       </div>
-      <div class="demo-readout" id="transP-readout">
-        Click the buttons to explore each concept visually.
+      <div class="demo-readout" id="transDefn-readout">
+        Click the buttons to see each aspect of the transition matrix.
       </div>
     </div>
-    <div id="transP-detail">
-      <div class="card accent-left-orange" id="transP-card-stationary">
-        <h3 class="orange">① Stationary π → Risk Sinks</h3>
+    <div id="transDefn-detail">
+      <div class="card accent-left" id="transDefn-card-definition">
+        <h3>From Adjacency to Probability</h3>
+        <div class="math-block">
+          <span class="keyword">Definition:</span><br>
+          <span class="highlight">P = D<sup>−1</sup>A</span><br><br>
+          P<sub>ij</sub> = A<sub>ij</sub> / deg(i)<br><br>
+          <span class="comment">D = diagonal matrix of node degrees</span><br>
+          <span class="comment">Each row of P sums to 1 (probability)</span>
+        </div>
+        <ul>
+          <li><strong>A counts walks</strong>: "How many length-k paths exist from i to j?"</li>
+          <li><strong>P gives probabilities</strong>: "If a random walker is at i, what's the chance it steps to j?"</li>
+          <li>The difference is <strong>normalization</strong> — a bank with 10 connections sends 1/10 of its shock to each neighbor; a bank with 2 connections sends 1/2</li>
+          <li>This is a <strong>Markov chain</strong>: the next state depends only on the current state, not the history</li>
+        </ul>
+      </div>
+      <div class="card accent-left-orange" id="transDefn-card-normalize" style="display:none;">
+        <h3 class="orange">Why Divide by Degree?</h3>
         <div class="math-block" style="font-size:13px;">
-          π<sub>i</sub> = d<sub>i</sub> / 2m<br>
+          <span class="keyword">Without normalization (A):</span><br>
+          JPM row: [0, 12.5, 8.3, 0, 0, 0]<br>
+          <span class="comment">→ total = 20.8 (not a probability!)</span><br><br>
+          <span class="keyword">With normalization (P = D⁻¹A):</span><br>
+          JPM row: [0, 0.60, 0.40, 0, 0, 0]<br>
+          <span class="comment">→ total = 1.0 ✓ (valid probability)</span>
+        </div>
+        <ul>
+          <li><strong>Analogy</strong>: JPM has $20.8B in loans to two banks. If JPM gets a shock, it distributes proportionally: 60% to GS ($12.5B link), 40% to Citi ($8.3B link)</li>
+          <li>A high-degree node (many connections) <strong>dilutes</strong> its shock across many neighbors — each neighbor gets a small fraction</li>
+          <li>A low-degree node (few connections) <strong>concentrates</strong> its shock — each neighbor gets a large fraction</li>
+          <li>This is why degree matters: <strong>not all connections are equally dangerous</strong></li>
+        </ul>
+      </div>
+      <div class="card accent-left-teal" id="transDefn-card-stationary" style="display:none;">
+        <h3 class="teal">Stationary Distribution: πP = π</h3>
+        <div class="math-block" style="font-size:13px;">
+          <span class="keyword">Definition:</span><br>
+          π · P = π <span class="comment">(left eigenvector, eigenvalue = 1)</span><br><br>
+          <span class="keyword">Solution (undirected graphs):</span><br>
+          <span class="highlight">π(i) = deg(i) / Σ<sub>j</sub> deg(j)</span><br><br>
+          <span class="comment">π is proportional to degree!</span>
+        </div>
+        <ul>
+          <li><strong>Meaning</strong>: after infinitely many random walk steps, the fraction of time spent at node i converges to π(i) — <strong>regardless of where you started</strong></li>
+          <li><strong>Why degree?</strong> High-degree nodes have more "incoming roads." A random walker entering any intersection is more likely to stumble into a node with many connections</li>
+          <li><strong>Finance</strong>: in the interbank network, risk naturally <strong>accumulates</strong> at the most connected institutions. π tells regulators where to put the biggest capital buffers</li>
+          <li><strong>Return time</strong>: E[T<sub>i→i</sub>] = 1/π(i) — highly connected banks see risk cycle back to them faster</li>
+        </ul>
+      </div>
+      <div class="card accent-left-purple" id="transDefn-card-symmetric" style="display:none;">
+        <h3 class="purple">Two Normalizations = Two Philosophies</h3>
+        <p style="color:var(--text-dim);font-size:13px;margin-bottom:10px;">The difference is not just formulas — it's <strong>how you aggregate neighbor information</strong>.</p>
+        <div class="math-block" style="font-size:12px;">
+          <span class="keyword">Example: A(deg=3) connected to B,C,D (each deg=1)</span><br><br>
+          <span class="highlight">D⁻¹A — "내가 보내는 쪽만 정규화"</span><br>
+          h<sub>A</sub> = (1/3)(h<sub>B</sub> + h<sub>C</sub> + h<sub>D</sub>) <span class="comment">← A의 degree로만 나눔</span><br>
+          h<sub>B</sub> = (1/1)(h<sub>A</sub>) <span class="comment">← B는 A 전체를 그대로 받음!</span><br><br>
+          <span class="highlight">D⁻½AD⁻½ — "보내는 쪽과 받는 쪽 양쪽 모두 정규화"</span><br>
+          h<sub>A</sub> = (1/√3)(h<sub>B</sub>/√1 + h<sub>C</sub>/√1 + h<sub>D</sub>/√1) <span class="comment">← 양쪽 degree 고려</span><br>
+          h<sub>B</sub> = (1/√1)(h<sub>A</sub>/√3) <span class="comment">← A의 degree도 분모에 반영</span>
+        </div>
+        <table class="matrix-table" style="margin:8px 0;">
+          <tr><th></th><th>Edge (i,j) weight</th><th>Meaning</th></tr>
+          <tr><td><code>D⁻¹A</code></td><td>1 / deg(i)</td><td>i의 선택지 수만큼 희석</td></tr>
+          <tr><td><code>D⁻½AD⁻½</code></td><td>1 / √(deg(i)·deg(j))</td><td>양쪽 degree의 기하평균으로 희석</td></tr>
+        </table>
+        <ul>
+          <li><strong>D⁻¹A 문제</strong>: 스케일 불균형 — leaf 노드 B는 허브 A의 정보를 <strong>100% 그대로</strong> 받지만, A는 이웃을 희석해서 받음</li>
+          <li><strong>D⁻½AD⁻½ 장점</strong>: 균형 + 허브 패널티 — B도 A를 1/√3 비율로 받아 허브의 과도한 영향력을 <strong>구조적으로 억제</strong></li>
+          <li><strong>Properties</strong>: D⁻¹A는 row-stochastic (각 행의 합 = 1). D⁻½AD⁻½는 symmetric → 고유값이 항상 실수, spectral 분석 가능</li>
+          <li><strong>Finance</strong>: 허브(degree 높은 종목)가 많은 그래프에서 D⁻¹A를 쓰면 leaf 노드에 거의 희석 없이 전달됨. D⁻½AD⁻½는 허브의 영향력을 자동 감쇠시켜 spillover 분석 결과에 상당한 차이를 만듦</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 19: TRANSITION P — 4 CONCEPTS ====== -->
+<!-- ====== SLIDE 19a: P — Stationary π ====== -->
+<div class="slide" data-index="19">
+  <div class="slide-num">19 / P — Stationary Distribution</div>
+  <span class="section-tag orange">Matrix P ①</span>
+  <h2>Stationary π → <span>Risk Sinks</span></h2>
+  <div class="two-col">
+    <div>
+      <canvas id="canvas-transP-stat" class="demo-canvas" width="440" height="360"></canvas>
+      <div class="demo-readout" id="transP-stat-readout">
+        Circle size ∝ <span class="val2">π</span>. Yellow dot = random walker. JPM & AIG have highest π — system's <em>risk sinks</em>.
+      </div>
+    </div>
+    <div>
+      <div class="card accent-left-orange">
+        <h3 class="orange">Stationary Distribution π</h3>
+        <div class="math-block" style="font-size:13px;">
+          <span class="keyword">Definition:</span> π · P = π<br>
+          <span class="highlight">π<sub>i</sub> = d<sub>i</sub> / 2m</span><br>
           <span class="comment">Long-run fraction of time spent at node i</span>
         </div>
         <ul>
@@ -1363,54 +1455,136 @@
           <li>High π<sub>i</sub> means bank i is a <strong>"gravity well"</strong> — risk keeps getting pulled back there regardless of where it starts</li>
           <li>In financial networks: π is proportional to <strong>total exposure</strong>. The biggest, most connected banks absorb the most long-run risk</li>
           <li><strong>Policy insight</strong>: π identifies which banks need the largest <strong>capital buffers</strong> — not because they caused the crisis, but because risk always flows toward them</li>
-        </ul>
-      </div>
-      <div class="card accent-left-red" id="transP-card-mfpt" style="display:none;">
-        <h3 style="color:var(--red)">② MFPT → Contagion Speed</h3>
-        <div class="math-block" style="font-size:13px;">
-          E[T<sub>i→j</sub>] = mean steps from i to j<br>
-          <span class="comment">Expected time for a shock to reach j from i</span>
-        </div>
-        <ul>
-          <li><strong>Analogy</strong>: "If a fire starts in Building A, how many minutes until it reaches Building B?" MFPT is the network equivalent — measured in <strong>propagation steps</strong>, not minutes</li>
-          <li>Short MFPT(i→j) = bank j gets infected <em>quickly</em> from bank i. These are the <strong>fast contagion channels</strong></li>
-          <li>Long MFPT(i→j) = bank j is <em>insulated</em> from bank i — many hops required, shock dissipates along the way</li>
-          <li><strong>Why it matters</strong>: Regulators can map the MFPT matrix to identify which bank pairs are "dangerously close" in network distance, even if they have no direct exposure</li>
-        </ul>
-      </div>
-      <div class="card accent-left-teal" id="transP-card-gap" style="display:none;">
-        <h3 class="teal">③ Spectral Gap → Mixing Time</h3>
-        <div class="math-block" style="font-size:13px;">
-          gap = 1 − |λ₂(P)|<br>
-          <span class="comment">mixing time ∝ 1/gap</span>
-        </div>
-        <ul>
-          <li><strong>Analogy</strong>: Stir cream into <strong>coffee</strong>. A large cup with few channels → slow mixing (cream stays separate for a while). A well-connected cup → fast mixing (cream blends instantly). The spectral gap measures this mixing speed</li>
-          <li>Large gap → the network "forgets" the initial shock quickly — contagion reaches <em>everywhere</em> fast, then equalizes</li>
-          <li>Small gap → the network has <strong>bottlenecks</strong>. Shocks stay trapped in one part, slowly leaking to others. Two "worlds" that barely communicate</li>
-          <li><strong>Market regime reading</strong>: In <em>normal</em> times, markets have a small gap (sectors are distinct). In <em>crisis</em>, the gap widens (everything correlates → one big pot of risk)</li>
-        </ul>
-      </div>
-      <div class="card accent-left-purple" id="transP-card-dynamics" style="display:none;">
-        <h3 class="purple">④ Encodes Dynamics</h3>
-        <div class="math-block" style="font-size:13px;">
-          u(t+1) = P · u(t)<br>
-          <span class="comment">Risk distribution evolves step by step</span>
-        </div>
-        <ul>
-          <li><strong>Analogy</strong>: A and L are <strong>photographs</strong> — they show the network at one instant. P is a <strong>movie</strong> — it shows how things <em>evolve</em> over time</li>
-          <li>Given any initial shock vector u(0), multiply by P repeatedly: u(1) = Pu(0), u(2) = P²u(0), ... This traces the exact path of contagion</li>
-          <li>P converges to the stationary distribution π regardless of starting point — <strong>all roads lead to the same long-run equilibrium</strong></li>
-          <li><strong>The complete picture</strong>: A tells you the <em>wiring</em>. L tells you the <em>flow capacity</em>. P tells you the <em>actual dynamics</em> — where risk is right now, and where it will be tomorrow</li>
+          <li><strong>Return time</strong>: E[T<sub>i→i</sub>] = 1/π(i) — highly connected banks see risk cycle back to them faster</li>
         </ul>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ====== SLIDE 19: UNIFIED VIEW ====== -->
-<div class="slide" data-index="19">
-  <div class="slide-num">19 / Synthesis — Unified</div>
+<!-- ====== SLIDE 19b: P — MFPT ====== -->
+<div class="slide" data-index="20">
+  <div class="slide-num">20 / P — Mean First Passage Time</div>
+  <span class="section-tag red">Matrix P ②</span>
+  <h2>MFPT → <span>Contagion Speed</span></h2>
+  <p style="color:var(--text-dim);font-size:13px;margin-bottom:12px;">노드 i에서 출발한 random walker가 <strong>처음으로</strong> 노드 j에 도달할 때까지 걸리는 평균 걸음 수</p>
+  <div class="two-col">
+    <div>
+      <canvas id="canvas-transP-mfpt" class="demo-canvas" width="440" height="360"></canvas>
+      <div class="demo-readout" id="transP-mfpt-readout">
+        <span style="color:var(--red)">1D chain</span>: H(1→4)=9 걸음. 재귀식 + Lehman ripple이 6초마다 교차.
+      </div>
+    </div>
+    <div>
+      <div class="card accent-left-red">
+        <h3 style="color:var(--red)">MFPT = Mean First Passage Time</h3>
+        <div class="math-block" style="font-size:12px;">
+          <span class="keyword">공식 정의:</span><br>
+          H(i→j) = E[min{t ≥ 1 : X<sub>t</sub>=j} | X<sub>0</sub>=i]<br><br>
+          <span class="keyword">재귀 방정식 (핵심):</span><br>
+          <span class="highlight">H(i,j) = 1 + Σ<sub>k≠j</sub> P[i][k] · H(k,j)</span><br>
+          <span class="comment">한 걸음(+1) 후, 이웃 k→j의 MFPT를 가중합산</span><br><br>
+          <span class="keyword">행렬 해법:</span><br>
+          Z = (I − P + W)<sup>−1</sup> <span class="comment">(fundamental matrix)</span><br>
+          <span class="highlight">H(i,j) = (Z[j][j] − Z[i][j]) / π(j)</span><br>
+          H(i,i) = 1/π(i) <span class="comment">(귀환 시간 = 역수)</span>
+        </div>
+      </div>
+      <div class="gap-sm"></div>
+      <div class="card accent-left-orange">
+        <h3 class="orange">Key Properties</h3>
+        <ul>
+          <li><strong>비대칭</strong>: H(i→j) ≠ H(j→i) — 허브에게 "가는 시간"은 짧지만, 허브가 "나를 찾아오는 시간"은 훨씬 김</li>
+          <li><strong>Commute time</strong>: C(i,j) = H(i→j) + H(j→i). Spectral: <code>C = V·Σ (u<sub>k</sub>(i)−u<sub>k</sub>(j))²/λ<sub>k</sub></code></li>
+          <li><strong>vs Hop count</strong>: MFPT는 <strong>구조 전체</strong> 반영 — 병목(bottleneck) 있으면 MFPT 폭발</li>
+          <li><strong>Finance</strong>: λ₂ 작을수록 commute time↑ → 그래프 취약</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 19c: P — Spectral Gap ====== -->
+<div class="slide" data-index="21">
+  <div class="slide-num">21 / P — Spectral Gap</div>
+  <span class="section-tag teal">Matrix P ③</span>
+  <h2>Spectral Gap → <span>Mixing Time</span></h2>
+  <div class="two-col">
+    <div>
+      <canvas id="canvas-transP-gap" class="demo-canvas" width="440" height="360"></canvas>
+      <div class="demo-readout" id="transP-gap-readout">
+        Two regimes alternating: <span class="val3">small gap</span> (bottleneck) vs <span class="val3">large gap</span> (well-mixed).
+      </div>
+    </div>
+    <div>
+      <div class="card accent-left-teal">
+        <h3 class="teal">Spectral Gap & Mixing</h3>
+        <div class="math-block" style="font-size:13px;">
+          <span class="keyword">Definition:</span><br>
+          <span class="highlight">gap = 1 − |λ₂(P)|</span><br>
+          <span class="comment">mixing time ∝ 1/gap</span>
+        </div>
+        <ul>
+          <li><strong>Analogy</strong>: Stir cream into <strong>coffee</strong>. Few channels → slow mixing (cream stays separate). Well-connected → fast mixing (cream blends instantly). The spectral gap measures this speed</li>
+          <li><strong>Large gap</strong> → the network "forgets" the initial shock quickly — contagion reaches <em>everywhere</em> fast, then equalizes</li>
+          <li><strong>Small gap</strong> → <strong>bottlenecks</strong>. Shocks stay trapped in one part, slowly leaking. Two "worlds" that barely communicate</li>
+          <li><strong>Market regime</strong>: <em>Normal</em> times → small gap (distinct sectors). <em>Crisis</em> → gap widens (everything correlates → one big pot of risk)</li>
+        </ul>
+      </div>
+      <div class="gap-sm"></div>
+      <div class="card accent-left">
+        <h3>Connection to Laplacian</h3>
+        <ul>
+          <li>Gap of P = λ₂ of normalized Laplacian L<sub>rw</sub></li>
+          <li>Same number, different matrix — <strong>P and L are two sides of the same coin</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 19d: P — Dynamics ====== -->
+<div class="slide" data-index="22">
+  <div class="slide-num">22 / P — Dynamics</div>
+  <span class="section-tag purple">Matrix P ④</span>
+  <h2>P Encodes <span>Dynamics</span></h2>
+  <div class="two-col">
+    <div>
+      <canvas id="canvas-transP-dyn" class="demo-canvas" width="440" height="360"></canvas>
+      <div class="demo-readout" id="transP-dyn-readout">
+        <span class="val">Step-by-step</span>: u(t) = P<sup>t</sup>·u(0). Watch risk redistribute. Eventually → stationary π.
+      </div>
+    </div>
+    <div>
+      <div class="card accent-left-purple">
+        <h3 class="purple">Markov Chain Dynamics</h3>
+        <div class="math-block" style="font-size:13px;">
+          <span class="highlight">u(t+1) = P · u(t)</span><br>
+          <span class="comment">Risk distribution evolves step by step</span>
+        </div>
+        <ul>
+          <li><strong>Analogy</strong>: A and L are <strong>photographs</strong> — they show the network at one instant. P is a <strong>movie</strong> — it shows how things <em>evolve</em> over time</li>
+          <li>Given any initial shock u(0), multiply by P repeatedly: u(1) = Pu(0), u(2) = P²u(0), ... This traces the exact path of contagion</li>
+          <li>P converges to π regardless of starting point — <strong>all roads lead to the same long-run equilibrium</strong></li>
+        </ul>
+      </div>
+      <div class="gap-sm"></div>
+      <div class="card accent-left-orange">
+        <h3 class="orange">The Complete Picture</h3>
+        <ul>
+          <li><strong>A</strong> tells you the <em>wiring</em> — who is connected</li>
+          <li><strong>L</strong> tells you the <em>flow capacity</em> — where it cracks</li>
+          <li><strong>P</strong> tells you the <em>actual dynamics</em> — where risk is right now, and where it will be tomorrow</li>
+          <li>All three from one network. Three questions, three matrices, <strong>one reality</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== SLIDE 23: UNIFIED VIEW ====== -->
+<div class="slide" data-index="23">
+  <div class="slide-num">23 / Synthesis — Unified</div>
   <span class="section-tag purple">Unified View</span>
   <h2>Three Matrices, <span>One Network</span></h2>
   <div class="three-col">
@@ -1461,9 +1635,9 @@
   </div>
 </div>
 
-<!-- ====== SLIDE 20: APPLICATIONS ====== -->
-<div class="slide" data-index="20">
-  <div class="slide-num">20 / Applications</div>
+<!-- ====== SLIDE 24: APPLICATIONS ====== -->
+<div class="slide" data-index="24">
+  <div class="slide-num">24 / Applications</div>
   <span class="section-tag orange">Practice</span>
   <h2>Applications in <span>Finance Research</span></h2>
   <div class="two-col">
@@ -1510,9 +1684,9 @@
   </div>
 </div>
 
-<!-- ====== SLIDE 21: SUMMARY ====== -->
-<div class="slide" data-index="21">
-  <div class="slide-num">21 / Summary</div>
+<!-- ====== SLIDE 25: SUMMARY ====== -->
+<div class="slide" data-index="25">
+  <div class="slide-num">25 / Summary</div>
   <span class="section-tag">Takeaway</span>
   <h2>Key <span>Takeaways</span></h2>
   <div class="three-col">
@@ -1587,7 +1761,11 @@ function goTo(idx) {
   if (slideIdx === 15) initModularityDemo();
   if (slideIdx === 16) initAdjADemo();
   if (slideIdx === 17) initLapLDemo();
-  if (slideIdx === 18) initTransPDemo();
+  if (slideIdx === 18) initTransDefnDemo();
+  if (slideIdx === 19) initTransPStat();
+  if (slideIdx === 20) initTransPMfpt();
+  if (slideIdx === 21) initTransPGap();
+  if (slideIdx === 22) initTransPDyn();
 }
 
 document.addEventListener('keydown', e => {
@@ -2736,7 +2914,351 @@ function drawLapL() {
   }
 }
 
-// ========== TRANSITION P DEMO (Slide 18) ==========
+// ========== TRANSITION DEFN DEMO (Slide 18) ==========
+const defnNodes = [
+  {label:'JPM',x:220,y:70,deg:5,color:'#ef4444'},
+  {label:'GS',x:360,y:100,deg:3,color:'#ef4444'},
+  {label:'Citi',x:320,y:220,deg:4,color:'#ef4444'},
+  {label:'BofA',x:160,y:220,deg:3,color:'#3b82f6'},
+  {label:'MS',x:80,y:130,deg:2,color:'#3b82f6'},
+];
+const defnEdges = [[0,1,12.5],[0,2,8.3],[0,3,7.6],[0,4,5.0],[1,2,6.7],[2,3,9.1],[3,4,4.2]];
+let defnCur = 'definition';
+let defnAnimFrame = 0;
+let defnAnimId = null;
+
+function initTransDefnDemo() { transDefnDemo('definition'); }
+
+function transDefnDemo(mode) {
+  defnCur = mode;
+  if (defnAnimId) cancelAnimationFrame(defnAnimId);
+  defnAnimFrame = 0;
+  ['definition','normalize','stationary','symmetric'].forEach(m => {
+    const el = document.getElementById('transDefn-card-' + m);
+    if (el) el.style.display = m === mode ? 'block' : 'none';
+  });
+  document.querySelectorAll('#canvas-transDefn ~ .demo-controls .demo-btn').forEach(b => b.classList.remove('active'));
+  if (event && event.target) event.target.classList.add('active');
+  drawTransDefn();
+}
+
+function drawTransDefn() {
+  const c = document.getElementById('canvas-transDefn');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  defnAnimFrame++;
+
+  if (defnCur === 'definition') {
+    // Show A matrix on left, P matrix on right with arrow
+    // Network in top half
+    ctx.strokeStyle = 'rgba(59,111,212,0.2)'; ctx.lineWidth = 1.5;
+    defnEdges.forEach(([i,j,w]) => {
+      ctx.beginPath(); ctx.moveTo(defnNodes[i].x,defnNodes[i].y);
+      ctx.lineTo(defnNodes[j].x,defnNodes[j].y); ctx.stroke();
+      const mx = (defnNodes[i].x+defnNodes[j].x)/2;
+      const my = (defnNodes[i].y+defnNodes[j].y)/2;
+      ctx.fillStyle = '#8899b0'; ctx.font = '9px IBM Plex Mono'; ctx.textAlign = 'center';
+      ctx.fillText(w.toFixed(1), mx, my - 5);
+    });
+    defnNodes.forEach(n => {
+      ctx.beginPath(); ctx.arc(n.x,n.y,16,0,Math.PI*2);
+      ctx.fillStyle = n.color; ctx.globalAlpha = 0.8; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 10px IBM Plex Mono';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.x, n.y);
+    });
+    // Formula at bottom
+    ctx.fillStyle = '#3b6fd4'; ctx.font = 'bold 16px IBM Plex Mono'; ctx.textAlign = 'center';
+    ctx.fillText('A (raw weights)', 130, 300);
+    ctx.fillStyle = '#e07b39';
+    ctx.fillText('→  ÷ deg(i)  →', 220, 300);
+    ctx.fillStyle = '#4ecca3';
+    ctx.fillText('P (probabilities)', 350, 300);
+    ctx.font = '11px IBM Plex Mono'; ctx.fillStyle = '#8899b0'; ctx.textAlign = 'center';
+    ctx.fillText('P = D⁻¹A : each row sums to 1', 220, 330);
+    const rr = document.getElementById('transDefn-readout');
+    if (rr) rr.innerHTML = `<span class="val">A</span> records raw exposures. <span class="val3">P = D⁻¹A</span> normalizes each row → probabilities. Edge labels = exposure ($B).`;
+  }
+  else if (defnCur === 'normalize') {
+    // Show JPM's row being normalized — animated
+    const t = Math.min(1, defnAnimFrame / 80);
+    const ease = t < 0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+    // JPM connections: GS=12.5, Citi=8.3, BofA=7.6, MS=5.0, total=33.4
+    const raw = [12.5, 8.3, 7.6, 5.0];
+    const total = raw.reduce((a,b)=>a+b,0);
+    const norm = raw.map(v => v/total);
+    const targets = [1,2,3,4]; // indices
+    const jpm = defnNodes[0];
+
+    // Draw JPM big in center-left
+    ctx.beginPath(); ctx.arc(100,180,28,0,Math.PI*2);
+    ctx.fillStyle = '#ef4444'; ctx.fill();
+    ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 14px IBM Plex Mono';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('JPM', 100, 180);
+    ctx.font = '10px IBM Plex Mono'; ctx.fillStyle = '#ffa';
+    ctx.fillText('deg = ' + total.toFixed(1), 100, 200);
+
+    // Draw targets on right
+    const labels = ['GS','Citi','BofA','MS'];
+    const colors = ['#ef4444','#ef4444','#3b82f6','#3b82f6'];
+    labels.forEach((lbl, idx) => {
+      const y = 80 + idx * 70;
+      // Arrow from JPM
+      const rawVal = raw[idx];
+      const normVal = norm[idx];
+      const displayVal = rawVal * (1-ease) + normVal * ease;
+      const isRaw = ease < 0.3;
+
+      ctx.strokeStyle = colors[idx];
+      ctx.lineWidth = 2 + normVal * 8;
+      ctx.globalAlpha = 0.5 + normVal;
+      ctx.beginPath(); ctx.moveTo(130,180); ctx.lineTo(280,y); ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // Arrow head
+      const angle = Math.atan2(y-180, 280-130);
+      ctx.beginPath();
+      ctx.moveTo(275,y);
+      ctx.lineTo(265,y-6); ctx.lineTo(265,y+6); ctx.closePath();
+      ctx.fillStyle = colors[idx]; ctx.fill();
+
+      // Target node
+      ctx.beginPath(); ctx.arc(310,y,14,0,Math.PI*2);
+      ctx.fillStyle = colors[idx]; ctx.globalAlpha = 0.8; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px IBM Plex Mono';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(lbl, 310, y);
+
+      // Value label — morphs from raw to normalized
+      ctx.font = 'bold 12px IBM Plex Mono';
+      ctx.textAlign = 'left';
+      if (ease < 0.5) {
+        ctx.fillStyle = '#3b6fd4';
+        ctx.fillText('$' + rawVal.toFixed(1) + 'B', 340, y + 4);
+      } else {
+        ctx.fillStyle = '#4ecca3';
+        ctx.fillText((normVal*100).toFixed(1) + '%', 340, y + 4);
+      }
+    });
+
+    // Transition label
+    ctx.fillStyle = ease < 0.5 ? '#3b6fd4' : '#4ecca3';
+    ctx.font = 'bold 13px IBM Plex Mono'; ctx.textAlign = 'center';
+    ctx.fillText(ease < 0.5 ? 'A[JPM] row = raw exposures ($B)' : 'P[JPM] row = probabilities (÷ 33.4)', 220, 30);
+
+    if (ease < 0.5) {
+      ctx.fillStyle = '#8899b0'; ctx.font = '11px IBM Plex Mono';
+      ctx.fillText('Total = $33.4B (not a probability)', 220, 50);
+    } else {
+      ctx.fillStyle = '#4ecca3'; ctx.font = '11px IBM Plex Mono';
+      ctx.fillText('Total = 100% ✓ (valid probability)', 220, 50);
+    }
+
+    const rr = document.getElementById('transDefn-readout');
+    if (rr) rr.innerHTML = ease < 0.5
+      ? `<span class="val">A row</span>: JPM's raw exposures. Total = $33.4B. Not probabilities — need normalization.`
+      : `<span class="val3">P row</span>: divide each by deg(JPM) = 33.4. Now: GS gets ${(norm[0]*100).toFixed(1)}%, Citi ${(norm[1]*100).toFixed(1)}%, BofA ${(norm[2]*100).toFixed(1)}%, MS ${(norm[3]*100).toFixed(1)}%.`;
+
+    if (t < 1) defnAnimId = requestAnimationFrame(drawTransDefn);
+  }
+  else if (defnCur === 'stationary') {
+    // Show random walker converging to π
+    const step = Math.floor(defnAnimFrame / 25) % 30;
+    // Simulate random walk visit counts
+    const visits = [0,0,0,0,0];
+    let pos = 0;
+    const adjList = [[1,2,3,4],[0,2],[0,1,3],[0,2,4],[0,3]];
+    let rng = 42;
+    for (let s = 0; s < step * 20 + 1; s++) {
+      const nbrs = adjList[pos];
+      rng = (rng * 1103515245 + 12345) & 0x7fffffff;
+      pos = nbrs[rng % nbrs.length];
+      visits[pos]++;
+    }
+    const totalV = visits.reduce((a,b)=>a+b,1);
+    const empirical = visits.map(v => v / totalV);
+    const theoretical = [5/14, 2/14, 3/14, 3/14, 2/14]; // proportional to degree
+
+    // Draw nodes sized by empirical π
+    ctx.strokeStyle = 'rgba(78,204,163,0.15)'; ctx.lineWidth = 1;
+    defnEdges.forEach(([i,j]) => {
+      ctx.beginPath(); ctx.moveTo(defnNodes[i].x,defnNodes[i].y);
+      ctx.lineTo(defnNodes[j].x,defnNodes[j].y); ctx.stroke();
+    });
+
+    defnNodes.forEach((n,i) => {
+      const emp = empirical[i];
+      const theo = theoretical[i];
+      const sz = 10 + emp * 60;
+
+      // Theoretical circle (outline)
+      const theoSz = 10 + theo * 60;
+      ctx.beginPath(); ctx.arc(n.x,n.y,theoSz,0,Math.PI*2);
+      ctx.strokeStyle = '#4ecca3'; ctx.lineWidth = 1.5; ctx.setLineDash([3,3]); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Empirical fill
+      ctx.beginPath(); ctx.arc(n.x,n.y,sz,0,Math.PI*2);
+      ctx.fillStyle = n.color; ctx.globalAlpha = 0.6; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
+
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 10px IBM Plex Mono';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.x, n.y - 5);
+      ctx.font = '8px IBM Plex Mono'; ctx.fillStyle = '#ffa';
+      ctx.fillText((emp*100).toFixed(0) + '%', n.x, n.y + 8);
+    });
+
+    // Step counter
+    ctx.fillStyle = '#4ecca3'; ctx.font = 'bold 13px IBM Plex Mono'; ctx.textAlign = 'left';
+    ctx.fillText(`Random walk: ${step * 20} steps`, 10, 20);
+    ctx.font = '11px IBM Plex Mono'; ctx.fillStyle = '#8899b0';
+    ctx.fillText('Solid = empirical visits, Dashed = π = deg/2m', 10, 38);
+    ctx.fillText('They converge as steps → ∞', 10, 54);
+
+    const rr = document.getElementById('transDefn-readout');
+    if (rr) rr.innerHTML = `<span class="val3">${step*20} steps</span>. Solid = actual visit frequency. Dashed ring = theoretical π ∝ degree. <em>They converge — all roads lead to the same π.</em>`;
+    defnAnimId = requestAnimationFrame(drawTransDefn);
+  }
+  else { // symmetric — star graph A(deg=3) ↔ B,C,D(deg=1)
+    const pulse = 0.5 + 0.5 * Math.sin(defnAnimFrame * 0.05);
+
+    // Star graph in top center
+    const hub = {x:220,y:85,label:'A',deg:3};
+    const leaves = [
+      {x:120,y:45,label:'B',deg:1},
+      {x:320,y:45,label:'C',deg:1},
+      {x:220,y:165,label:'D',deg:1}
+    ];
+    const allStar = [hub,...leaves];
+
+    // Edges
+    leaves.forEach(lf => {
+      ctx.strokeStyle = 'rgba(192,132,252,0.3)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(hub.x,hub.y); ctx.lineTo(lf.x,lf.y); ctx.stroke();
+    });
+    // Nodes
+    allStar.forEach(n => {
+      const isHub = n.label === 'A';
+      const sz = isHub ? 20 : 14;
+      ctx.beginPath(); ctx.arc(n.x,n.y,sz,0,Math.PI*2);
+      ctx.fillStyle = isHub ? '#e07b39' : '#4ecca3';
+      ctx.globalAlpha = 0.8; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = `bold ${isHub?12:10}px IBM Plex Mono`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(n.label, n.x, n.y - 4);
+      ctx.font = '8px IBM Plex Mono'; ctx.fillStyle = '#ffa';
+      ctx.fillText('deg='+n.deg, n.x, n.y + 8);
+    });
+
+    // Divider
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(220,195); ctx.lineTo(220,355); ctx.stroke();
+
+    // Left column: D⁻¹A
+    ctx.fillStyle = '#e07b39'; ctx.font = 'bold 12px IBM Plex Mono'; ctx.textAlign = 'center';
+    ctx.fillText('D⁻¹A (random walk)', 110, 210);
+
+    // A node update
+    ctx.fillStyle = '#1a2234';
+    ctx.fillRect(15,222,190,38);
+    ctx.strokeStyle = '#e07b39'; ctx.lineWidth = 1;
+    ctx.strokeRect(15,222,190,38);
+    ctx.fillStyle = '#4ecca3'; ctx.font = '11px IBM Plex Mono'; ctx.textAlign = 'center';
+    ctx.fillText('h_A = (1/3)(h_B+h_C+h_D)', 110, 237);
+    ctx.fillStyle = '#8899b0'; ctx.font = '9px IBM Plex Mono';
+    ctx.fillText("A의 degree로만 나눔", 110, 253);
+
+    // B node update
+    ctx.fillStyle = '#1a2234';
+    ctx.fillRect(15,268,190,38);
+    ctx.strokeStyle = '#e07b39'; ctx.lineWidth = 1;
+    ctx.strokeRect(15,268,190,38);
+    ctx.fillStyle = '#4ecca3'; ctx.font = '11px IBM Plex Mono'; ctx.textAlign = 'center';
+    ctx.fillText('h_B = (1/1)(h_A)', 110, 283);
+    ctx.fillStyle = '#8899b0'; ctx.font = '9px IBM Plex Mono';
+    ctx.fillText("B는 A 전체를 그대로 받음!", 110, 299);
+
+    // Problem badge
+    const bPulse = 0.6 + 0.4 * pulse;
+    ctx.fillStyle = `rgba(239,68,68,${bPulse * 0.3})`;
+    ctx.fillRect(15,314,190,30);
+    ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1;
+    ctx.strokeRect(15,314,190,30);
+    ctx.fillStyle = '#ef4444'; ctx.font = 'bold 10px IBM Plex Mono'; ctx.textAlign = 'center';
+    ctx.fillText('⚠ 스케일 불균형', 110, 326);
+    ctx.fillStyle = '#8899b0'; ctx.font = '9px IBM Plex Mono';
+    ctx.fillText('row-stochastic (행 합=1)', 110, 340);
+
+    // Right column: D⁻½AD⁻½
+    ctx.fillStyle = '#c084fc'; ctx.font = 'bold 12px IBM Plex Mono'; ctx.textAlign = 'center';
+    ctx.fillText('D⁻½AD⁻½ (symmetric)', 330, 210);
+
+    // A node update
+    ctx.fillStyle = '#1a2234';
+    ctx.fillRect(235,222,190,38);
+    ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 1;
+    ctx.strokeRect(235,222,190,38);
+    ctx.fillStyle = '#4ecca3'; ctx.font = '10px IBM Plex Mono'; ctx.textAlign = 'center';
+    ctx.fillText('h_A=(1/√3)(h_B/√1+...)', 330, 237);
+    ctx.fillStyle = '#8899b0'; ctx.font = '9px IBM Plex Mono';
+    ctx.fillText('양쪽 degree 모두 고려', 330, 253);
+
+    // B node update
+    ctx.fillStyle = '#1a2234';
+    ctx.fillRect(235,268,190,38);
+    ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 1;
+    ctx.strokeRect(235,268,190,38);
+    ctx.fillStyle = '#4ecca3'; ctx.font = '10px IBM Plex Mono'; ctx.textAlign = 'center';
+    ctx.fillText('h_B = (1/√1)(h_A/√3)', 330, 283);
+    ctx.fillStyle = '#8899b0'; ctx.font = '9px IBM Plex Mono';
+    ctx.fillText("A의 degree도 분모에 반영", 330, 299);
+
+    // Benefit badge
+    ctx.fillStyle = 'rgba(78,204,163,0.15)';
+    ctx.fillRect(235,314,190,30);
+    ctx.strokeStyle = '#4ecca3'; ctx.lineWidth = 1;
+    ctx.strokeRect(235,314,190,30);
+    ctx.fillStyle = '#4ecca3'; ctx.font = 'bold 10px IBM Plex Mono'; ctx.textAlign = 'center';
+    ctx.fillText('✓ 균형 + 허브 패널티', 330, 326);
+    ctx.fillStyle = '#8899b0'; ctx.font = '9px IBM Plex Mono';
+    ctx.fillText('symmetric → spectral 분석 가능', 330, 340);
+
+    // Animated arrows showing flow difference
+    // Left: thick arrow A→B (100%)
+    const arrowAlpha = 0.4 + pulse * 0.4;
+    // D⁻¹A: A→B thin, B→A thick
+    ctx.globalAlpha = arrowAlpha;
+    ctx.strokeStyle = '#e07b39'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(55,105); ctx.lineTo(55,80); ctx.stroke(); // A→B thin
+    ctx.font = '8px IBM Plex Mono'; ctx.fillStyle = '#e07b39'; ctx.textAlign = 'right';
+    ctx.fillText('1/3', 52, 93);
+    ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(65,80); ctx.lineTo(65,105); ctx.stroke(); // B→A thick
+    ctx.font = '8px IBM Plex Mono'; ctx.textAlign = 'left';
+    ctx.fillText('1/1', 70, 93);
+
+    // D⁻½AD⁻½: A↔B equal
+    ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(385,80); ctx.lineTo(385,105); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(375,105); ctx.lineTo(375,80); ctx.stroke();
+    ctx.font = '8px IBM Plex Mono'; ctx.fillStyle = '#c084fc'; ctx.textAlign = 'center';
+    ctx.fillText('1/√3', 380, 93);
+    ctx.globalAlpha = 1;
+
+    const rr = document.getElementById('transDefn-readout');
+    if (rr) rr.innerHTML = `<span class="val2">D⁻¹A</span>: "내가 보내는 쪽만 정규화" → leaf가 허브 영향 100% 받음. <span style="color:var(--accent4)">D⁻½AD⁻½</span>: "양쪽 모두 정규화" → 허브 영향력 자동 감쇠. 같은 eigenvalue, 다른 철학.`;
+    defnAnimId = requestAnimationFrame(drawTransDefn);
+  }
+}
+
+// ========== TRANSITION P — 4 SEPARATE SLIDES ==========
 const transPNodes = [
   {label:'JPM',x:220,y:90,deg:5,pi:0.19},
   {label:'GS',x:340,y:110,deg:4,pi:0.15},
@@ -2747,238 +3269,159 @@ const transPNodes = [
   {label:'Lehman',x:140,y:280,deg:2,pi:0.08},
 ];
 const transPEdges = [[0,1],[0,2],[0,3],[0,4],[1,2],[1,5],[2,3],[2,5],[3,4],[3,6],[4,6],[1,3]];
-let transCur = 'stationary';
-let transAnimFrame = 0;
-let transAnimId = null;
 
-function initTransPDemo() { transPDemo('stationary'); }
-
-function transPDemo(mode) {
-  transCur = mode;
-  if (transAnimId) cancelAnimationFrame(transAnimId);
-  transAnimFrame = 0;
-  ['stationary','mfpt','gap','dynamics'].forEach(m => {
-    const el = document.getElementById('transP-card-' + m);
-    if (el) el.style.display = m === mode ? 'block' : 'none';
+// --- Slide 19: Stationary ---
+let statAnimFrame = 0, statAnimId = null;
+function initTransPStat() { statAnimFrame = 0; if(statAnimId) cancelAnimationFrame(statAnimId); drawTransPStat(); }
+function drawTransPStat() {
+  const c = document.getElementById('canvas-transP-stat'); if(!c) return;
+  const ctx = c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); statAnimFrame++;
+  const pulse = 0.5+0.5*Math.sin(statAnimFrame*0.03);
+  ctx.strokeStyle='rgba(224,123,57,0.15)';ctx.lineWidth=1;
+  transPEdges.forEach(([i,j])=>{ctx.beginPath();ctx.moveTo(transPNodes[i].x,transPNodes[i].y);ctx.lineTo(transPNodes[j].x,transPNodes[j].y);ctx.stroke();});
+  const wEdge=transPEdges[Math.floor((statAnimFrame/30)%transPEdges.length)];
+  const wt=(statAnimFrame%30)/30;
+  const wa=transPNodes[wEdge[0]],wb=transPNodes[wEdge[1]];
+  ctx.beginPath();ctx.arc(wa.x+(wb.x-wa.x)*wt,wa.y+(wb.y-wa.y)*wt,5,0,Math.PI*2);ctx.fillStyle='#f59e0b';ctx.fill();
+  transPNodes.forEach(n=>{
+    const sz=10+n.pi*80*(0.8+pulse*0.2);
+    ctx.beginPath();ctx.arc(n.x,n.y,sz,0,Math.PI*2);ctx.fillStyle=`rgba(224,123,57,${0.3+n.pi})`;ctx.fill();
+    ctx.beginPath();ctx.arc(n.x,n.y,12,0,Math.PI*2);ctx.fillStyle='#e07b39';ctx.fill();
+    ctx.strokeStyle='#0a0e17';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='bold 9px IBM Plex Mono';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n.label,n.x,n.y-3);
+    ctx.font='8px IBM Plex Mono';ctx.fillStyle='#ffd';ctx.fillText('π='+n.pi.toFixed(2),n.x,n.y+8);
   });
-  document.querySelectorAll('#canvas-transP ~ .demo-controls .demo-btn').forEach(b => b.classList.remove('active'));
-  if (event && event.target) event.target.classList.add('active');
-  drawTransP();
+  statAnimId=requestAnimationFrame(drawTransPStat);
 }
 
-function drawTransP() {
-  const c = document.getElementById('canvas-transP');
-  if (!c) return;
-  const ctx = c.getContext('2d');
-  ctx.clearRect(0, 0, c.width, c.height);
-  transAnimFrame++;
-
-  if (transCur === 'stationary') {
-    // Nodes pulsing proportional to π
-    const pulse = 0.5 + 0.5 * Math.sin(transAnimFrame * 0.03);
-    ctx.strokeStyle = 'rgba(224,123,57,0.15)'; ctx.lineWidth = 1;
-    transPEdges.forEach(([i,j]) => {
-      ctx.beginPath(); ctx.moveTo(transPNodes[i].x,transPNodes[i].y);
-      ctx.lineTo(transPNodes[j].x,transPNodes[j].y); ctx.stroke();
-    });
-    // "Random walker" dot
-    const walkerEdge = transPEdges[Math.floor((transAnimFrame / 30) % transPEdges.length)];
-    const wt = (transAnimFrame % 30) / 30;
-    const wa = transPNodes[walkerEdge[0]], wb = transPNodes[walkerEdge[1]];
-    const wx = wa.x + (wb.x - wa.x) * wt;
-    const wy = wa.y + (wb.y - wa.y) * wt;
-    ctx.beginPath(); ctx.arc(wx,wy,5,0,Math.PI*2);
-    ctx.fillStyle = '#f59e0b'; ctx.fill();
-
-    transPNodes.forEach(n => {
-      const sz = 10 + n.pi * 80 * (0.8 + pulse * 0.2);
-      ctx.beginPath(); ctx.arc(n.x,n.y,sz,0,Math.PI*2);
-      ctx.fillStyle = `rgba(224,123,57,${0.3 + n.pi})`;
-      ctx.fill();
-      ctx.beginPath(); ctx.arc(n.x,n.y,12,0,Math.PI*2);
-      ctx.fillStyle = '#e07b39'; ctx.fill();
-      ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px IBM Plex Mono';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(n.label, n.x, n.y - 3);
-      ctx.font = '8px IBM Plex Mono'; ctx.fillStyle = '#ffd';
-      ctx.fillText('π=' + n.pi.toFixed(2), n.x, n.y + 8);
-    });
-    const rr = document.getElementById('transP-readout');
-    if (rr) rr.innerHTML = `<span class="val2">Circle size ∝ π</span>. Yellow dot = random walker. JPM & AIG have highest π — they are the system's <em>risk sinks</em>.`;
-    transAnimId = requestAnimationFrame(drawTransP);
-  }
-  else if (transCur === 'mfpt') {
-    // Show arrows from Lehman to each bank with "distance" labels
-    const mfpts = {0:3.2, 1:4.1, 2:3.8, 3:2.1, 4:2.5, 5:5.3};
-    ctx.strokeStyle = 'rgba(239,68,68,0.12)'; ctx.lineWidth = 1;
-    transPEdges.forEach(([i,j]) => {
-      ctx.beginPath(); ctx.moveTo(transPNodes[i].x,transPNodes[i].y);
-      ctx.lineTo(transPNodes[j].x,transPNodes[j].y); ctx.stroke();
-    });
-    const lehman = transPNodes[6];
-    // Animated "ripple" from Lehman
-    const rippleR = (transAnimFrame * 1.5) % 250;
-    ctx.beginPath(); ctx.arc(lehman.x,lehman.y,rippleR,0,Math.PI*2);
-    ctx.strokeStyle = `rgba(239,68,68,${Math.max(0, 0.4 - rippleR/300)})`;
-    ctx.lineWidth = 2; ctx.stroke();
-
-    Object.entries(mfpts).forEach(([idx,mfpt]) => {
-      const n = transPNodes[parseInt(idx)];
-      const reached = rippleR > Math.sqrt((n.x-lehman.x)**2 + (n.y-lehman.y)**2);
-      // Arrow from Lehman
-      ctx.strokeStyle = reached ? '#ef4444' : 'rgba(239,68,68,0.2)';
-      ctx.lineWidth = reached ? 2 : 1;
-      ctx.setLineDash([4,3]);
-      ctx.beginPath(); ctx.moveTo(lehman.x,lehman.y); ctx.lineTo(n.x,n.y); ctx.stroke();
-      ctx.setLineDash([]);
-      // MFPT label
-      const mx = (lehman.x+n.x)/2, my = (lehman.y+n.y)/2;
-      ctx.fillStyle = reached ? '#ef4444' : '#555';
-      ctx.font = 'bold 10px IBM Plex Mono'; ctx.textAlign = 'center';
-      ctx.fillText(mfpt.toFixed(1) + ' steps', mx, my - 6);
-    });
-
-    transPNodes.forEach((n,i) => {
-      ctx.beginPath(); ctx.arc(n.x,n.y,i===6?16:12,0,Math.PI*2);
-      ctx.fillStyle = i === 6 ? '#ef4444' : '#3b6fd4';
-      ctx.globalAlpha = 0.8; ctx.fill(); ctx.globalAlpha = 1;
-      ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px IBM Plex Mono';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(n.label, n.x, n.y);
-    });
-    const rr = document.getElementById('transP-readout');
-    if (rr) rr.innerHTML = `<span style="color:var(--red)">Ripple from Lehman</span>. MFPT labels = expected steps to reach each bank. AIG = 2.1 steps (dangerously close). HSBC = 5.3 (more insulated).`;
-    transAnimId = requestAnimationFrame(drawTransP);
-  }
-  else if (transCur === 'gap') {
-    // Two scenarios: small gap (two clusters) vs large gap (well-mixed)
-    const phase = Math.floor(transAnimFrame / 120) % 2;
-    const t = (transAnimFrame % 120) / 120;
-
-    if (phase === 0) {
-      // Small gap — two clusters barely connected
-      ctx.fillStyle = '#4ecca3'; ctx.font = 'bold 12px IBM Plex Mono'; ctx.textAlign = 'left';
-      ctx.fillText('Small spectral gap: bottleneck', 10, 20);
-      ctx.font = '11px IBM Plex Mono'; ctx.fillStyle = '#8899b0';
-      ctx.fillText('Shock stays trapped in one cluster', 10, 38);
-      // Two clusters
-      for (let i = 0; i < 5; i++) {
-        const angle = (i/5) * Math.PI * 2;
-        const x1 = 130 + 60 * Math.cos(angle), y1 = 200 + 60 * Math.sin(angle);
-        const x2 = 310 + 60 * Math.cos(angle), y2 = 200 + 60 * Math.sin(angle);
-        ctx.beginPath(); ctx.arc(x1,y1,10,0,Math.PI*2);
-        ctx.fillStyle = `rgba(239,68,68,${i===0 ? 0.3+t*0.7 : 0.1+t*0.3})`; ctx.fill();
-        ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1; ctx.stroke();
-        ctx.beginPath(); ctx.arc(x2,y2,10,0,Math.PI*2);
-        ctx.fillStyle = `rgba(59,111,212,${0.1+t*0.05})`; ctx.fill();
-        ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1; ctx.stroke();
-      }
-      // Sparse connection between clusters
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1;
-      ctx.setLineDash([3,6]);
-      ctx.beginPath(); ctx.moveTo(190,200); ctx.lineTo(250,200); ctx.stroke();
-      ctx.setLineDash([]);
-      // Intra-cluster edges
-      ctx.strokeStyle = 'rgba(239,68,68,0.2)'; ctx.lineWidth = 1;
-      for (let i = 0; i < 5; i++) for (let j = i+1; j < 5; j++) {
-        const a1 = (i/5)*Math.PI*2, a2 = (j/5)*Math.PI*2;
-        ctx.beginPath();
-        ctx.moveTo(130+60*Math.cos(a1),200+60*Math.sin(a1));
-        ctx.lineTo(130+60*Math.cos(a2),200+60*Math.sin(a2)); ctx.stroke();
-      }
-      ctx.strokeStyle = 'rgba(59,111,212,0.2)';
-      for (let i = 0; i < 5; i++) for (let j = i+1; j < 5; j++) {
-        const a1 = (i/5)*Math.PI*2, a2 = (j/5)*Math.PI*2;
-        ctx.beginPath();
-        ctx.moveTo(310+60*Math.cos(a1),200+60*Math.sin(a1));
-        ctx.lineTo(310+60*Math.cos(a2),200+60*Math.sin(a2)); ctx.stroke();
-      }
-      ctx.fillStyle = '#ef4444'; ctx.font = '10px IBM Plex Mono'; ctx.textAlign = 'center';
-      ctx.fillText('Cluster A (infected)', 130, 290);
-      ctx.fillStyle = '#3b82f6';
-      ctx.fillText('Cluster B (safe...for now)', 310, 290);
-    } else {
-      // Large gap — well mixed
-      ctx.fillStyle = '#4ecca3'; ctx.font = 'bold 12px IBM Plex Mono'; ctx.textAlign = 'left';
-      ctx.fillText('Large spectral gap: well-mixed', 10, 20);
-      ctx.font = '11px IBM Plex Mono'; ctx.fillStyle = '#8899b0';
-      ctx.fillText('Shock reaches everyone quickly', 10, 38);
-      for (let i = 0; i < 10; i++) {
-        const angle = (i/10) * Math.PI * 2;
-        const x = 220 + 100 * Math.cos(angle), y = 200 + 100 * Math.sin(angle);
-        const intensity = 0.2 + t * 0.6;
-        ctx.beginPath(); ctx.arc(x,y,10,0,Math.PI*2);
-        ctx.fillStyle = `rgba(239,68,68,${intensity})`; ctx.fill();
-        ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1; ctx.stroke();
-        // Edges to several neighbors
-        for (let d = 1; d <= 3; d++) {
-          const j = (i+d) % 10;
-          const a2 = (j/10)*Math.PI*2;
-          ctx.strokeStyle = 'rgba(239,68,68,0.15)'; ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(x,y);
-          ctx.lineTo(220+100*Math.cos(a2),200+100*Math.sin(a2));
-          ctx.stroke();
-        }
-      }
-      ctx.fillStyle = '#ef4444'; ctx.font = '10px IBM Plex Mono'; ctx.textAlign = 'center';
-      ctx.fillText('Everyone infected simultaneously', 220, 330);
+// --- Slide 20: MFPT ---
+let mfptAnimFrame = 0, mfptAnimId = null;
+function initTransPMfpt() { mfptAnimFrame = 0; if(mfptAnimId) cancelAnimationFrame(mfptAnimId); drawTransPMfpt(); }
+function drawTransPMfpt() {
+  const c = document.getElementById('canvas-transP-mfpt'); if(!c) return;
+  const ctx = c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height); mfptAnimFrame++;
+  const phase = Math.floor(mfptAnimFrame / 180) % 2;
+  const t = (mfptAnimFrame % 180) / 180;
+  if (phase === 0) {
+    // 1D chain
+    ctx.fillStyle='#ef4444';ctx.font='bold 12px IBM Plex Mono';ctx.textAlign='center';
+    ctx.fillText('직관: 1D random walk에서 MFPT',220,22);
+    const cY=80;
+    const cn=[{x:60,l:'1'},{x:170,l:'2'},{x:280,l:'3'},{x:390,l:'4'}];
+    for(let i=0;i<3;i++){const a=cn[i],b=cn[i+1];
+      ctx.strokeStyle='#4ecca3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a.x+20,cY-8);ctx.lineTo(b.x-20,cY-8);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(b.x-20,cY-8);ctx.lineTo(b.x-28,cY-14);ctx.lineTo(b.x-28,cY-2);ctx.closePath();ctx.fillStyle='#4ecca3';ctx.fill();
+      ctx.fillStyle='#4ecca3';ctx.font='10px IBM Plex Mono';ctx.textAlign='center';ctx.fillText('1/2',(a.x+b.x)/2,cY-20);
+      ctx.strokeStyle='#e07b39';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(b.x-20,cY+8);ctx.lineTo(a.x+20,cY+8);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(a.x+20,cY+8);ctx.lineTo(a.x+28,cY+2);ctx.lineTo(a.x+28,cY+14);ctx.closePath();ctx.fillStyle='#e07b39';ctx.fill();
+      ctx.fillStyle='#e07b39';ctx.font='10px IBM Plex Mono';ctx.fillText('1/2',(a.x+b.x)/2,cY+22);
     }
-    const rr = document.getElementById('transP-readout');
-    if (rr) rr.innerHTML = phase === 0
-      ? `<span class="val3">Small gap</span> = bottleneck between clusters. Shock trapped in one side. <em>Like cream staying separate in coffee.</em>`
-      : `<span class="val3">Large gap</span> = well-connected. Shock reaches everyone fast. <em>Like cream instantly blending.</em>`;
-    transAnimId = requestAnimationFrame(drawTransP);
+    cn.forEach((n,i)=>{const isS=i===0,isE=i===3,sz=(isS||isE)?18:14;
+      ctx.beginPath();ctx.arc(n.x,cY,sz,0,Math.PI*2);ctx.fillStyle=isS?'#e07b39':isE?'#4ecca3':'#3b6fd4';ctx.globalAlpha=0.8;ctx.fill();ctx.globalAlpha=1;
+      ctx.strokeStyle='#0a0e17';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 12px IBM Plex Mono';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n.l,n.x,cY);
+    });
+    ctx.fillStyle='#e07b39';ctx.font='10px IBM Plex Mono';ctx.textAlign='center';ctx.fillText('출발',60,cY+34);
+    ctx.fillStyle='#4ecca3';ctx.fillText('목표',390,cY+34);
+    const wp=60+(330*Math.min(1,t*1.3));ctx.beginPath();ctx.arc(wp,cY-30,5,0,Math.PI*2);ctx.fillStyle='#f59e0b';ctx.fill();
+    ctx.fillStyle='#8899b0';ctx.font='11px IBM Plex Mono';ctx.textAlign='center';ctx.fillText('H(1→4) = 9 걸음 (평균)',220,cY+55);
+    // Boxes
+    ctx.fillStyle='#1a2234';ctx.fillRect(15,155,200,60);ctx.fillRect(225,155,200,60);
+    ctx.strokeStyle='#ef4444';ctx.lineWidth=1;ctx.strokeRect(15,155,200,60);ctx.strokeStyle='#4ecca3';ctx.strokeRect(225,155,200,60);
+    ctx.fillStyle='#ef4444';ctx.font='bold 10px IBM Plex Mono';ctx.textAlign='center';ctx.fillText('비대칭: H(i→j) ≠ H(j→i)',115,172);
+    ctx.fillStyle='#8899b0';ctx.font='9px IBM Plex Mono';ctx.fillText('방향이 다르면 평균 시간도 다름',115,190);ctx.fillText('허브→leaf: 빠름 | leaf→허브: 느림',115,205);
+    ctx.fillStyle='#4ecca3';ctx.font='bold 10px IBM Plex Mono';ctx.fillText('commute = H(i→j)+H(j→i)',325,172);
+    ctx.fillStyle='#8899b0';ctx.font='9px IBM Plex Mono';ctx.fillText('왕복 평균 → 그래프 거리 척도',325,190);ctx.fillText('C(i,j) = V·Σ (uₖ(i)−uₖ(j))²/λₖ',325,205);
+    ctx.fillStyle='#1a2234';ctx.fillRect(60,230,320,45);ctx.strokeStyle='#e07b39';ctx.lineWidth=1;ctx.strokeRect(60,230,320,45);
+    ctx.fillStyle='#4ecca3';ctx.font='bold 11px IBM Plex Mono';ctx.textAlign='center';ctx.fillText('H(i,j) = 1 + Σ P[i][k]·H(k,j)',220,248);
+    ctx.fillStyle='#8899b0';ctx.font='9px IBM Plex Mono';ctx.fillText('한 걸음(+1) + 이웃에서의 MFPT 가중합',220,265);
+    ctx.fillStyle='#c084fc';ctx.font='10px IBM Plex Mono';ctx.textAlign='center';
+    ctx.fillText('hop count와 달리 MFPT는 그래프 구조 전체를 반영',220,295);ctx.fillText('병목(bottleneck)이 있으면 MFPT 폭발 → "실질적 접근성"',220,312);
+    ctx.fillStyle='#1a2234';ctx.fillRect(110,325,220,28);ctx.strokeStyle='#c084fc';ctx.lineWidth=1;ctx.strokeRect(110,325,220,28);
+    ctx.fillStyle='#c084fc';ctx.font='bold 10px IBM Plex Mono';ctx.textAlign='center';ctx.fillText('귀환 시간: H(i,i) = 1/π(i)',220,342);
+  } else {
+    // Lehman ripple
+    const mfpts={0:3.2,1:4.1,2:3.8,3:2.1,4:2.5,5:5.3};
+    ctx.strokeStyle='rgba(239,68,68,0.12)';ctx.lineWidth=1;
+    transPEdges.forEach(([i,j])=>{ctx.beginPath();ctx.moveTo(transPNodes[i].x,transPNodes[i].y);ctx.lineTo(transPNodes[j].x,transPNodes[j].y);ctx.stroke();});
+    const leh=transPNodes[6];const rR=(mfptAnimFrame*1.5)%250;
+    ctx.beginPath();ctx.arc(leh.x,leh.y,rR,0,Math.PI*2);ctx.strokeStyle=`rgba(239,68,68,${Math.max(0,0.4-rR/300)})`;ctx.lineWidth=2;ctx.stroke();
+    Object.entries(mfpts).forEach(([idx,mfpt])=>{const n=transPNodes[parseInt(idx)];const reached=rR>Math.sqrt((n.x-leh.x)**2+(n.y-leh.y)**2);
+      ctx.strokeStyle=reached?'#ef4444':'rgba(239,68,68,0.2)';ctx.lineWidth=reached?2:1;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(leh.x,leh.y);ctx.lineTo(n.x,n.y);ctx.stroke();ctx.setLineDash([]);
+      const mx=(leh.x+n.x)/2,my=(leh.y+n.y)/2;ctx.fillStyle=reached?'#ef4444':'#555';ctx.font='bold 10px IBM Plex Mono';ctx.textAlign='center';ctx.fillText(mfpt.toFixed(1)+' steps',mx,my-6);
+    });
+    transPNodes.forEach((n,i)=>{ctx.beginPath();ctx.arc(n.x,n.y,i===6?16:12,0,Math.PI*2);ctx.fillStyle=i===6?'#ef4444':'#3b6fd4';ctx.globalAlpha=0.8;ctx.fill();ctx.globalAlpha=1;
+      ctx.strokeStyle='#0a0e17';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 9px IBM Plex Mono';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n.label,n.x,n.y);
+    });
+    ctx.fillStyle='#ef4444';ctx.font='bold 12px IBM Plex Mono';ctx.textAlign='left';ctx.fillText('Lehman → each bank MFPT',10,20);
+    ctx.font='10px IBM Plex Mono';ctx.fillStyle='#8899b0';ctx.fillText('AIG=2.1 (위험) vs HSBC=5.3 (절연)',10,38);
   }
-  else { // dynamics
-    // Step-by-step Markov chain: u(t) = P^t u(0)
-    const step = Math.floor(transAnimFrame / 40) % 8;
-    let shock = transPNodes.map(() => 0);
-    shock[6] = 1; // Start at Lehman
-    for (let s = 0; s < step; s++) {
-      const ns = transPNodes.map(() => 0);
-      transPNodes.forEach((_,i) => {
-        const nbrs = transPEdges.filter(([a,b]) => a===i||b===i).map(([a,b]) => a===i?b:a);
-        nbrs.forEach(j => { ns[j] += shock[i] / nbrs.length; });
-      });
-      shock = ns;
-    }
-    const maxS = Math.max(...shock, 0.001);
+  const rr=document.getElementById('transP-mfpt-readout');
+  if(rr) rr.innerHTML=phase===0?`<span style="color:var(--red)">1D chain</span>: H(1→4)=9. 재귀식 + 비대칭 + commute time.`
+    :`<span style="color:var(--red)">Lehman ripple</span>: AIG=2.1 steps (직접), HSBC=5.3 (병목 너머).`;
+  mfptAnimId=requestAnimationFrame(drawTransPMfpt);
+}
 
-    transPEdges.forEach(([i,j]) => {
-      ctx.strokeStyle = 'rgba(192,132,252,0.12)'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(transPNodes[i].x,transPNodes[i].y);
-      ctx.lineTo(transPNodes[j].x,transPNodes[j].y); ctx.stroke();
-    });
-    transPNodes.forEach((n,i) => {
-      const intensity = shock[i] / maxS;
-      const sz = 10 + intensity * 14;
-      if (intensity > 0.1) {
-        ctx.beginPath(); ctx.arc(n.x,n.y,sz+6,0,Math.PI*2);
-        ctx.fillStyle = `rgba(192,132,252,${intensity*0.3})`; ctx.fill();
-      }
-      ctx.beginPath(); ctx.arc(n.x,n.y,Math.max(10,sz),0,Math.PI*2);
-      const r = Math.floor(50 + intensity * 142);
-      const g = Math.floor(50 + (1-intensity) * 82);
-      const b = Math.floor(100 + intensity * 152);
-      ctx.fillStyle = `rgb(${r},${g},${b})`;
-      ctx.fill(); ctx.strokeStyle = '#0a0e17'; ctx.lineWidth = 2; ctx.stroke();
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 9px IBM Plex Mono';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(n.label, n.x, n.y - 3);
-      ctx.font = '8px IBM Plex Mono'; ctx.fillStyle = '#ddd';
-      ctx.fillText(shock[i].toFixed(2), n.x, n.y + 8);
-    });
-    ctx.fillStyle = '#c084fc'; ctx.font = 'bold 14px IBM Plex Mono'; ctx.textAlign = 'left';
-    ctx.fillText(`u(${step}) = P${step > 0 ? '^'+step : ''} · u(0)`, 10, 20);
-    ctx.font = '11px IBM Plex Mono'; ctx.fillStyle = '#8899b0';
-    ctx.fillText(`Step ${step}: multiply by P again`, 10, 38);
-    const rr = document.getElementById('transP-readout');
-    if (rr) rr.innerHTML = `<span class="val">Step ${step}</span>: u(${step}) = P<sup>${step}</sup>·u(0). Watch risk redistribute each step. Eventually → stationary π regardless of start.`;
-    transAnimId = requestAnimationFrame(drawTransP);
+// --- Slide 21: Spectral Gap ---
+let gapAnimFrame=0,gapAnimId=null;
+function initTransPGap(){gapAnimFrame=0;if(gapAnimId)cancelAnimationFrame(gapAnimId);drawTransPGap();}
+function drawTransPGap(){
+  const c=document.getElementById('canvas-transP-gap');if(!c)return;
+  const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);gapAnimFrame++;
+  const phase=Math.floor(gapAnimFrame/120)%2;const t=(gapAnimFrame%120)/120;
+  if(phase===0){
+    ctx.fillStyle='#4ecca3';ctx.font='bold 12px IBM Plex Mono';ctx.textAlign='left';ctx.fillText('Small spectral gap: bottleneck',10,20);
+    ctx.font='11px IBM Plex Mono';ctx.fillStyle='#8899b0';ctx.fillText('Shock stays trapped in one cluster',10,38);
+    for(let i=0;i<5;i++){const angle=(i/5)*Math.PI*2;
+      const x1=130+60*Math.cos(angle),y1=200+60*Math.sin(angle);const x2=310+60*Math.cos(angle),y2=200+60*Math.sin(angle);
+      ctx.beginPath();ctx.arc(x1,y1,10,0,Math.PI*2);ctx.fillStyle=`rgba(239,68,68,${i===0?0.3+t*0.7:0.1+t*0.3})`;ctx.fill();ctx.strokeStyle='#ef4444';ctx.lineWidth=1;ctx.stroke();
+      ctx.beginPath();ctx.arc(x2,y2,10,0,Math.PI*2);ctx.fillStyle=`rgba(59,111,212,${0.1+t*0.05})`;ctx.fill();ctx.strokeStyle='#3b82f6';ctx.lineWidth=1;ctx.stroke();
+    }
+    ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;ctx.setLineDash([3,6]);ctx.beginPath();ctx.moveTo(190,200);ctx.lineTo(250,200);ctx.stroke();ctx.setLineDash([]);
+    ctx.strokeStyle='rgba(239,68,68,0.2)';ctx.lineWidth=1;
+    for(let i=0;i<5;i++)for(let j=i+1;j<5;j++){const a1=(i/5)*Math.PI*2,a2=(j/5)*Math.PI*2;ctx.beginPath();ctx.moveTo(130+60*Math.cos(a1),200+60*Math.sin(a1));ctx.lineTo(130+60*Math.cos(a2),200+60*Math.sin(a2));ctx.stroke();}
+    ctx.strokeStyle='rgba(59,111,212,0.2)';
+    for(let i=0;i<5;i++)for(let j=i+1;j<5;j++){const a1=(i/5)*Math.PI*2,a2=(j/5)*Math.PI*2;ctx.beginPath();ctx.moveTo(310+60*Math.cos(a1),200+60*Math.sin(a1));ctx.lineTo(310+60*Math.cos(a2),200+60*Math.sin(a2));ctx.stroke();}
+    ctx.fillStyle='#ef4444';ctx.font='10px IBM Plex Mono';ctx.textAlign='center';ctx.fillText('Cluster A (infected)',130,290);ctx.fillStyle='#3b82f6';ctx.fillText('Cluster B (safe...for now)',310,290);
+  }else{
+    ctx.fillStyle='#4ecca3';ctx.font='bold 12px IBM Plex Mono';ctx.textAlign='left';ctx.fillText('Large spectral gap: well-mixed',10,20);
+    ctx.font='11px IBM Plex Mono';ctx.fillStyle='#8899b0';ctx.fillText('Shock reaches everyone quickly',10,38);
+    for(let i=0;i<10;i++){const angle=(i/10)*Math.PI*2;const x=220+100*Math.cos(angle),y=200+100*Math.sin(angle);const intensity=0.2+t*0.6;
+      ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);ctx.fillStyle=`rgba(239,68,68,${intensity})`;ctx.fill();ctx.strokeStyle='#ef4444';ctx.lineWidth=1;ctx.stroke();
+      for(let d=1;d<=3;d++){const j2=(i+d)%10;const a2=(j2/10)*Math.PI*2;ctx.strokeStyle='rgba(239,68,68,0.15)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(220+100*Math.cos(a2),200+100*Math.sin(a2));ctx.stroke();}
+    }
+    ctx.fillStyle='#ef4444';ctx.font='10px IBM Plex Mono';ctx.textAlign='center';ctx.fillText('Everyone infected simultaneously',220,330);
   }
+  const rr=document.getElementById('transP-gap-readout');
+  if(rr)rr.innerHTML=phase===0?`<span class="val3">Small gap</span> = bottleneck. Shock trapped. <em>Like cream staying separate in coffee.</em>`
+    :`<span class="val3">Large gap</span> = well-connected. Instant spread. <em>Like cream blending instantly.</em>`;
+  gapAnimId=requestAnimationFrame(drawTransPGap);
+}
+
+// --- Slide 22: Dynamics ---
+let dynAnimFrame=0,dynAnimId=null;
+function initTransPDyn(){dynAnimFrame=0;if(dynAnimId)cancelAnimationFrame(dynAnimId);drawTransPDyn();}
+function drawTransPDyn(){
+  const c=document.getElementById('canvas-transP-dyn');if(!c)return;
+  const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);dynAnimFrame++;
+  const step=Math.floor(dynAnimFrame/40)%8;
+  let shock=transPNodes.map(()=>0);shock[6]=1;
+  for(let s=0;s<step;s++){const ns=transPNodes.map(()=>0);transPNodes.forEach((_,i)=>{
+    const nbrs=transPEdges.filter(([a,b])=>a===i||b===i).map(([a,b])=>a===i?b:a);nbrs.forEach(j=>{ns[j]+=shock[i]/nbrs.length;});});shock=ns;}
+  const maxS=Math.max(...shock,0.001);
+  transPEdges.forEach(([i,j])=>{ctx.strokeStyle='rgba(192,132,252,0.12)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(transPNodes[i].x,transPNodes[i].y);ctx.lineTo(transPNodes[j].x,transPNodes[j].y);ctx.stroke();});
+  transPNodes.forEach((n,i)=>{const intensity=shock[i]/maxS;const sz=10+intensity*14;
+    if(intensity>0.1){ctx.beginPath();ctx.arc(n.x,n.y,sz+6,0,Math.PI*2);ctx.fillStyle=`rgba(192,132,252,${intensity*0.3})`;ctx.fill();}
+    ctx.beginPath();ctx.arc(n.x,n.y,Math.max(10,sz),0,Math.PI*2);
+    ctx.fillStyle=`rgb(${Math.floor(50+intensity*142)},${Math.floor(50+(1-intensity)*82)},${Math.floor(100+intensity*152)})`;
+    ctx.fill();ctx.strokeStyle='#0a0e17';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='bold 9px IBM Plex Mono';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n.label,n.x,n.y-3);
+    ctx.font='8px IBM Plex Mono';ctx.fillStyle='#ddd';ctx.fillText(shock[i].toFixed(2),n.x,n.y+8);
+  });
+  ctx.fillStyle='#c084fc';ctx.font='bold 14px IBM Plex Mono';ctx.textAlign='left';ctx.fillText(`u(${step}) = P${step>0?'^'+step:''} · u(0)`,10,20);
+  ctx.font='11px IBM Plex Mono';ctx.fillStyle='#8899b0';ctx.fillText(`Step ${step}: multiply by P again`,10,38);
+  const rr=document.getElementById('transP-dyn-readout');
+  if(rr)rr.innerHTML=`<span class="val">Step ${step}</span>: u(${step}) = P<sup>${step}</sup>·u(0). Watch risk redistribute. Eventually → stationary π.`;
+  dynAnimId=requestAnimationFrame(drawTransPDyn);
 }
 
 // ========== INIT ==========
